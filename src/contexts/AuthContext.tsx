@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,12 +18,16 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-async function checkProfile(userId: string): Promise<boolean> {
-  const { data } = await supabase
+// Exported ref so JoinPage can skip the orphan check during signup
+export const skipProfileCheck = { current: false };
+
+async function checkProfile(userId: string): Promise<boolean | null> {
+  const { data, error } = await supabase
     .from("profiles" as any)
     .select("vendor_id")
     .eq("id", userId)
     .maybeSingle();
+  if (error) return null; // null = unknown, don't treat as orphan
   return !!(data as any)?.vendor_id;
 }
 
@@ -48,11 +52,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Cold start: orphan check is appropriate here
       const profileLinked = await checkProfile(session.user.id);
       if (!mounted) return;
 
-      if (!profileLinked) {
-        // Orphan auth account — sign out
+      if (profileLinked === false) {
+        // Confirmed orphan — sign out
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
@@ -61,16 +66,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // profileLinked === true or null (error → assume OK, don't destroy session)
       setSession(session);
       setUser(session.user);
-      setHasProfile(true);
+      setHasProfile(profileLinked === true);
       setLoading(false);
     };
 
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (!mounted) return;
 
         if (!session?.user) {
@@ -81,10 +87,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // If JoinPage flagged that signup is in progress, accept session as-is
+        if (skipProfileCheck.current) {
+          setSession(session);
+          setUser(session.user);
+          setHasProfile(false); // profile not yet created
+          setLoading(false);
+          return;
+        }
+
         const profileLinked = await checkProfile(session.user.id);
         if (!mounted) return;
 
-        if (!profileLinked) {
+        if (profileLinked === false && event === "INITIAL_SESSION") {
+          // Only sign out orphans on cold start, not mid-flow
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
@@ -95,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setSession(session);
         setUser(session.user);
-        setHasProfile(true);
+        setHasProfile(profileLinked === true);
         setLoading(false);
       }
     );
