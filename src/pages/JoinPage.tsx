@@ -219,6 +219,35 @@ const JoinPage = () => {
             {submitting ? "Submitting…" : "Join now →"}
           </Button>
         </form>
+
+        {/* Returning vendor login */}
+        <div className="mt-12 border-t border-border pt-8">
+          <h2 className="text-lg font-semibold text-foreground">Returning vendor?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Enter your email and we'll send you a login link.
+          </p>
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <Input
+              type="email"
+              placeholder="you@company.com"
+              value={magicEmail}
+              onChange={(e) => setMagicEmail(e.target.value)}
+              className="sm:max-w-xs"
+            />
+            <Button
+              variant="outline"
+              disabled={magicLinkSending}
+              onClick={handleMagicLink}
+            >
+              {magicLinkSending ? "Sending…" : "Send login link"}
+            </Button>
+          </div>
+          {magicLinkSent && (
+            <p className="mt-3 text-sm text-green-600">
+              Check your email for a login link.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
