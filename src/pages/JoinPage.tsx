@@ -28,8 +28,8 @@ const JoinPage = () => {
   });
 
   useEffect(() => {
-    if (!loading && user) navigate("/profile", { replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && hasProfile) navigate("/profile", { replace: true });
+  }, [hasProfile, loading, navigate]);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
