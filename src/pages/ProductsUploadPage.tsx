@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface ProductRow {
   brand: string;
@@ -51,6 +51,9 @@ const ProductsUploadPage = () => {
     load();
   }, [user]);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
   const updateRow = (i: number, field: keyof ProductRow, value: string | number) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
   };
@@ -64,6 +67,69 @@ const ProductsUploadPage = () => {
     if (rows.length === 1) return;
     setRows(rows.filter((_, idx) => idx !== i));
   };
+
+  const parseFile = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
+
+        if (json.length === 0) {
+          toast.error("The file appears to be empty.");
+          return;
+        }
+
+        // Normalize headers to lowercase
+        const parsed: ProductRow[] = json.map((row) => {
+          const normalized: Record<string, any> = {};
+          Object.keys(row).forEach((k) => {
+            normalized[k.toLowerCase().trim()] = row[k];
+          });
+          return {
+            brand: String(normalized.brand || "").trim(),
+            model: String(normalized.model || "").trim(),
+            category: String(normalized.category || "").trim(),
+            units: parseInt(normalized.units) || 1,
+          };
+        }).filter((r) => r.brand || r.model || r.category);
+
+        if (parsed.length === 0) {
+          toast.error("No valid rows found. Expected columns: brand, model, category, units.");
+          return;
+        }
+
+        const available = 30 - rows.length;
+        const toAdd = parsed.slice(0, available);
+        // Replace the initial empty row if it's untouched
+        const currentIsEmpty = rows.length === 1 && !rows[0].brand && !rows[0].model && !rows[0].category;
+        setRows(currentIsEmpty ? toAdd : [...rows, ...toAdd]);
+
+        toast.success(`Imported ${toAdd.length} product${toAdd.length > 1 ? "s" : ""}.`);
+        if (parsed.length > available) {
+          toast.info(`${parsed.length - available} rows were skipped (30 max).`);
+        }
+      } catch {
+        toast.error("Could not parse the file. Please check the format.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }, [rows]);
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) parseFile(file);
+  }, [parseFile]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) parseFile(file);
+    e.target.value = "";
+  }, [parseFile]);
 
   const handleSubmit = async () => {
     if (!vendorId) return;
@@ -152,6 +218,36 @@ const ProductsUploadPage = () => {
           <p className="mt-2 text-muted-foreground">
             Add up to 30 products. Customers who book in advance will find you first.
           </p>
+        </div>
+
+        {/* File upload drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleFileDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+            dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"
+          }`}
+        >
+          <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+          <p className="text-sm font-medium text-foreground">Upload Excel or CSV file</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Drag & drop or click to browse — columns: brand, model, category, units
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground uppercase">or enter manually</span>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <div className="space-y-3">
