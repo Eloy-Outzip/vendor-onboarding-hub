@@ -98,6 +98,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(true);
 
         const profileLinked = await checkProfile(session.user.id);
+
+        // Send login notification email (fire-and-forget, only on actual sign-in)
+        if (profileLinked === true && event === "SIGNED_IN") {
+          supabase.functions.invoke("notify-login").catch(() => {});
+        }
         if (!mounted) return;
 
         if (profileLinked === false && event === "INITIAL_SESSION") {
