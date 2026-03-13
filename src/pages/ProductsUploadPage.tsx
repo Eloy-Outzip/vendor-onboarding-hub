@@ -51,6 +51,9 @@ const ProductsUploadPage = () => {
     load();
   }, [user]);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
   const updateRow = (i: number, field: keyof ProductRow, value: string | number) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
   };
@@ -64,6 +67,69 @@ const ProductsUploadPage = () => {
     if (rows.length === 1) return;
     setRows(rows.filter((_, idx) => idx !== i));
   };
+
+  const parseFile = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json<Record<string, any>>(sheet);
+
+        if (json.length === 0) {
+          toast.error("The file appears to be empty.");
+          return;
+        }
+
+        // Normalize headers to lowercase
+        const parsed: ProductRow[] = json.map((row) => {
+          const normalized: Record<string, any> = {};
+          Object.keys(row).forEach((k) => {
+            normalized[k.toLowerCase().trim()] = row[k];
+          });
+          return {
+            brand: String(normalized.brand || "").trim(),
+            model: String(normalized.model || "").trim(),
+            category: String(normalized.category || "").trim(),
+            units: parseInt(normalized.units) || 1,
+          };
+        }).filter((r) => r.brand || r.model || r.category);
+
+        if (parsed.length === 0) {
+          toast.error("No valid rows found. Expected columns: brand, model, category, units.");
+          return;
+        }
+
+        const available = 30 - rows.length;
+        const toAdd = parsed.slice(0, available);
+        // Replace the initial empty row if it's untouched
+        const currentIsEmpty = rows.length === 1 && !rows[0].brand && !rows[0].model && !rows[0].category;
+        setRows(currentIsEmpty ? toAdd : [...rows, ...toAdd]);
+
+        toast.success(`Imported ${toAdd.length} product${toAdd.length > 1 ? "s" : ""}.`);
+        if (parsed.length > available) {
+          toast.info(`${parsed.length - available} rows were skipped (30 max).`);
+        }
+      } catch {
+        toast.error("Could not parse the file. Please check the format.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }, [rows]);
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) parseFile(file);
+  }, [parseFile]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) parseFile(file);
+    e.target.value = "";
+  }, [parseFile]);
 
   const handleSubmit = async () => {
     if (!vendorId) return;
