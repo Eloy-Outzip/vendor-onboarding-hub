@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          slug: string | null
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          slug?: string | null
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          slug?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand: string
@@ -22,6 +54,7 @@ export type Database = {
           created_at: string
           id: string
           model: string
+          status: string | null
           units: number | null
           vendor_id: string
         }
@@ -32,6 +65,7 @@ export type Database = {
           created_at?: string
           id?: string
           model: string
+          status?: string | null
           units?: number | null
           vendor_id: string
         }
@@ -42,12 +76,42 @@ export type Database = {
           created_at?: string
           id?: string
           model?: string
+          status?: string | null
           units?: number | null
           vendor_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
@@ -67,6 +131,7 @@ export type Database = {
           first_name: string
           id: string
           name: string
+          phone: string | null
           rents_equipment: boolean | null
           status: string
           website: string | null
@@ -82,6 +147,7 @@ export type Database = {
           first_name: string
           id?: string
           name: string
+          phone?: string | null
           rents_equipment?: boolean | null
           status?: string
           website?: string | null
@@ -97,6 +163,7 @@ export type Database = {
           first_name?: string
           id?: string
           name?: string
+          phone?: string | null
           rents_equipment?: boolean | null
           status?: string
           website?: string | null
