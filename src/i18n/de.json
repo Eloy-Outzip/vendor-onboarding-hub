@@ -96,6 +96,14 @@
     "imported": "{count} Produkt(e) importiert.",
     "skipped": "{count} Zeilen wurden übersprungen (max. 30)."
   },
+  "login": {
+    "title": "Willkommen zurück",
+    "subtitle": "Gib deine E-Mail ein und wir senden dir einen Login-Link.",
+    "noAccount": "Noch kein Konto?",
+    "joinLink": "Jetzt beitreten →",
+    "alreadyHaveAccount": "Bereits ein Konto?",
+    "loginLink": "Anmelden →"
+  },
   "notFound": {
     "title": "404",
     "message": "Seite nicht gefunden",

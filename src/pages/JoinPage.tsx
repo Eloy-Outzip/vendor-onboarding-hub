@@ -13,9 +13,6 @@ const JoinPage = () => {
   const { loading, hasProfile } = useAuth();
   const { t, locale } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
-  const [magicEmail, setMagicEmail] = useState("");
-  const [magicLinkSending, setMagicLinkSending] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     companyName: "",
@@ -34,33 +31,7 @@ const JoinPage = () => {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleMagicLink = async () => {
-    if (!magicEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(magicEmail)) {
-      toast.error(t("join.errorEmail"));
-      return;
-    }
-    setMagicLinkSending(true);
-    setMagicLinkSent(false);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: magicEmail,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: `${window.location.origin}/profile`,
-          data: { locale },
-        },
-      });
-      if (error) throw error;
-      setMagicLinkSent(true);
-    } catch (err: any) {
-      const msg = err.message?.toLowerCase().includes("signups not allowed")
-        ? t("join.errorAccountNotFound")
-        : err.message || t("join.errorMagic");
-      toast.error(msg);
-    } finally {
-      setMagicLinkSending(false);
-    }
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,18 +173,13 @@ const JoinPage = () => {
           </Button>
         </form>
 
-        <div className="mt-12 border-t border-border pt-8">
-          <h2 className="text-lg font-semibold text-foreground">{t("join.returningTitle")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("join.returningSubtitle")}</p>
-          <div className="mt-4 flex flex-col sm:flex-row gap-3">
-            <Input type="email" placeholder={t("join.magicPlaceholder")} value={magicEmail} onChange={(e) => setMagicEmail(e.target.value)} className="sm:max-w-xs" />
-            <Button variant="outline" disabled={magicLinkSending} onClick={handleMagicLink}>
-              {magicLinkSending ? t("join.sendingLink") : t("join.sendLink")}
-            </Button>
-          </div>
-          {magicLinkSent && (
-            <p className="mt-3 text-sm text-primary">{t("join.magicSent")}</p>
-          )}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            {t("login.alreadyHaveAccount")}{" "}
+            <a href="/" className="text-primary font-medium hover:underline">
+              {t("login.loginLink")}
+            </a>
+          </p>
         </div>
       </div>
     </div>

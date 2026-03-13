@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
 import WelcomePage from "./pages/WelcomePage";
 import ProfilePage from "./pages/ProfilePage";
@@ -20,7 +21,8 @@ const queryClient = new QueryClient();
 const RootRedirect = () => {
   const { loading, hasProfile } = useAuth();
   if (loading) return null;
-  return <Navigate to={hasProfile ? "/profile" : "/join"} replace />;
+  if (hasProfile) return <Navigate to="/profile" replace />;
+  return <LoginPage />;
 };
 
 const App = () => (
