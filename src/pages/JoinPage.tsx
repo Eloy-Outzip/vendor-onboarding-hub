@@ -95,6 +95,10 @@ const JoinPage = () => {
       if (vendorError) throw vendorError;
 
       const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
+
+      // Prevent AuthContext from signing out the new session before profile is created
+      skipProfileCheck.current = true;
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password,
@@ -105,12 +109,14 @@ const JoinPage = () => {
       });
 
       if (authError) {
+        skipProfileCheck.current = false;
         toast.error(t("join.errorAccount"));
         return;
       }
 
       const userId = authData.user?.id;
       if (!userId) {
+        skipProfileCheck.current = false;
         toast.error(t("join.errorAccount"));
         return;
       }
@@ -118,6 +124,9 @@ const JoinPage = () => {
       const { error: profileError } = await supabase
         .from("profiles" as any)
         .insert({ id: userId, email: form.email, vendor_id: vendor.id } as any);
+
+      // Profile created (or failed) — re-enable orphan detection
+      skipProfileCheck.current = false;
 
       if (profileError) {
         toast.error(t("join.errorAccount"));
