@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
 import WelcomePage from "./pages/WelcomePage";
 import ProfilePage from "./pages/ProfilePage";
