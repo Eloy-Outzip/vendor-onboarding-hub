@@ -17,6 +17,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const RootRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={user ? "/profile" : "/join"} replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -27,7 +33,7 @@ const App = () => (
           <AuthProvider>
             <LanguageSwitcher />
             <Routes>
-              <Route path="/" element={<Navigate to="/join" replace />} />
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/join" element={<JoinPage />} />
               <Route path="/welcome" element={<WelcomePage />} />
               <Route
