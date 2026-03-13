@@ -39,28 +39,34 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: profile } = await supabase
-        .from("profiles" as any).select("vendor_id").eq("id", user.id).single();
-      const vid = (profile as any)?.vendor_id;
-      if (!vid) { setLoading(false); return; }
-      setVendorId(vid);
-      const [vendorRes, catsRes, prodsRes] = await Promise.all([
-        supabase.from("vendors").select("*").eq("id", vid).single(),
-        supabase.from("categories" as any).select("id, name").eq("vendor_id", vid),
-        supabase.from("products").select("id").eq("vendor_id", vid),
-      ]);
-      if (vendorRes.data) {
-        const v = vendorRes.data as unknown as VendorRow;
-        setVendor(v);
-        setForm({
-          first_name: v.first_name || "", name: v.name || "", email: v.email || "",
-          phone: v.phone || "", website: v.website || "", address: v.address || "",
-          city: v.city || "", country: v.country || "",
-        });
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles" as any).select("vendor_id").eq("id", user.id).maybeSingle();
+        if (profileError) { console.error("Profile fetch error:", profileError); return; }
+        const vid = (profile as any)?.vendor_id;
+        if (!vid) return;
+        setVendorId(vid);
+        const [vendorRes, catsRes, prodsRes] = await Promise.all([
+          supabase.from("vendors").select("*").eq("id", vid).maybeSingle(),
+          supabase.from("categories" as any).select("id, name").eq("vendor_id", vid),
+          supabase.from("products").select("id").eq("vendor_id", vid),
+        ]);
+        if (vendorRes.data) {
+          const v = vendorRes.data as unknown as VendorRow;
+          setVendor(v);
+          setForm({
+            first_name: v.first_name || "", name: v.name || "", email: v.email || "",
+            phone: v.phone || "", website: v.website || "", address: v.address || "",
+            city: v.city || "", country: v.country || "",
+          });
+        }
+        setCategories(((catsRes.data as any) || []) as { id: string; name: string }[]);
+        setProducts(prodsRes.data || []);
+      } catch (err) {
+        console.error("ProfilePage load error:", err);
+      } finally {
+        setLoading(false);
       }
-      setCategories(((catsRes.data as any) || []) as { id: string; name: string }[]);
-      setProducts(prodsRes.data || []);
-      setLoading(false);
     };
     load();
   }, [user]);
