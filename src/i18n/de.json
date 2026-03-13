@@ -37,7 +37,8 @@
     "errorEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
     "errorAccount": "Kontoerstellung fehlgeschlagen. Bitte kontaktiere den Support oder versuche es mit einer anderen E-Mail.",
     "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
-    "errorMagic": "Login-Link konnte nicht gesendet werden."
+    "errorMagic": "Login-Link konnte nicht gesendet werden.",
+    "errorAccountNotFound": "Kein Konto für diese E-Mail gefunden. Bitte registriere dich zuerst."
   },
   "welcome": {
     "title": "Du bist auf der Karte! 🎉",

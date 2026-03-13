@@ -53,7 +53,10 @@ const JoinPage = () => {
       if (error) throw error;
       setMagicLinkSent(true);
     } catch (err: any) {
-      toast.error(err.message || t("join.errorMagic"));
+      const msg = err.message?.toLowerCase().includes("signups not allowed")
+        ? t("join.errorAccountNotFound")
+        : err.message || t("join.errorMagic");
+      toast.error(msg);
     } finally {
       setMagicLinkSending(false);
     }
