@@ -63,7 +63,7 @@ const JoinPage = () => {
       if (vendorError) throw vendorError;
 
       // Step 2: Sign up with auto-generated password
-      const password = crypto.randomUUID() + "-" + crypto.randomUUID();
+      const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password,
