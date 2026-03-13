@@ -44,7 +44,10 @@ const JoinPage = () => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicEmail,
-        options: { emailRedirectTo: `${window.location.origin}/profile` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`,
+          data: { locale },
+        },
       });
       if (error) throw error;
       setMagicLinkSent(true);
