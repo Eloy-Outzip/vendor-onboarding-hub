@@ -1,20 +1,23 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const WelcomePage = () => (
-  <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4">
-    <div className="max-w-md text-center space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight text-foreground">
-        You're on the map! 🎉
-      </h1>
-      <p className="text-muted-foreground text-lg">
-        Check your email to confirm your account and access your vendor profile.
-      </p>
-      <Button asChild size="lg">
-        <Link to="/profile">Go to my profile →</Link>
-      </Button>
+const WelcomePage = () => {
+  const { t } = useLanguage();
+
+  return (
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4">
+      <div className="max-w-md text-center space-y-6">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          {t("welcome.title")}
+        </h1>
+        <p className="text-muted-foreground text-lg">{t("welcome.subtitle")}</p>
+        <Button asChild size="lg">
+          <Link to="/profile">{t("welcome.cta")}</Link>
+        </Button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default WelcomePage;

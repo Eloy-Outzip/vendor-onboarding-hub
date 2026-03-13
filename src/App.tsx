@@ -4,7 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import Index from "./pages/Index";
 import JoinPage from "./pages/JoinPage";
 import WelcomePage from "./pages/WelcomePage";
@@ -21,38 +23,41 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Navigate to="/join" replace />} />
-            <Route path="/join" element={<JoinPage />} />
-            <Route path="/welcome" element={<WelcomePage />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/services"
-              element={
-                <ProtectedRoute>
-                  <ServicesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/products-upload"
-              element={
-                <ProtectedRoute>
-                  <ProductsUploadPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <LanguageSwitcher />
+            <Routes>
+              <Route path="/" element={<Navigate to="/join" replace />} />
+              <Route path="/join" element={<JoinPage />} />
+              <Route path="/welcome" element={<WelcomePage />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/services"
+                element={
+                  <ProtectedRoute>
+                    <ServicesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/products-upload"
+                element={
+                  <ProtectedRoute>
+                    <ProductsUploadPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
