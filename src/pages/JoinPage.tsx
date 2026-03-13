@@ -11,6 +11,9 @@ const JoinPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [magicEmail, setMagicEmail] = useState("");
+  const [magicLinkSending, setMagicLinkSending] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     companyName: "",
@@ -28,6 +31,27 @@ const JoinPage = () => {
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleMagicLink = async () => {
+    if (!magicEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(magicEmail)) {
+      toast.error("Please enter a valid email.");
+      return;
+    }
+    setMagicLinkSending(true);
+    setMagicLinkSent(false);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicEmail,
+        options: { emailRedirectTo: `${window.location.origin}/profile` },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send login link.");
+    } finally {
+      setMagicLinkSending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,6 +243,35 @@ const JoinPage = () => {
             {submitting ? "Submitting…" : "Join now →"}
           </Button>
         </form>
+
+        {/* Returning vendor login */}
+        <div className="mt-12 border-t border-border pt-8">
+          <h2 className="text-lg font-semibold text-foreground">Returning vendor?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Enter your email and we'll send you a login link.
+          </p>
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <Input
+              type="email"
+              placeholder="you@company.com"
+              value={magicEmail}
+              onChange={(e) => setMagicEmail(e.target.value)}
+              className="sm:max-w-xs"
+            />
+            <Button
+              variant="outline"
+              disabled={magicLinkSending}
+              onClick={handleMagicLink}
+            >
+              {magicLinkSending ? "Sending…" : "Send login link"}
+            </Button>
+          </div>
+          {magicLinkSent && (
+            <p className="mt-3 text-sm text-primary">
+              Check your email for a login link.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
