@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const JoinPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [magicEmail, setMagicEmail] = useState("");
   const [magicLinkSending, setMagicLinkSending] = useState(false);
@@ -44,7 +44,10 @@ const JoinPage = () => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicEmail,
-        options: { emailRedirectTo: `${window.location.origin}/profile` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`,
+          data: { locale },
+        },
       });
       if (error) throw error;
       setMagicLinkSent(true);
@@ -91,7 +94,10 @@ const JoinPage = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/profile` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`,
+          data: { locale },
+        },
       });
 
       if (authError) {

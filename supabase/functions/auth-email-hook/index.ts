@@ -16,13 +16,23 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+const EMAIL_SUBJECTS: Record<string, Record<string, string>> = {
+  en: {
+    signup: 'Confirm your email',
+    invite: "You've been invited",
+    magiclink: 'Your login link',
+    recovery: 'Reset your password',
+    email_change: 'Confirm your new email',
+    reauthentication: 'Your verification code',
+  },
+  de: {
+    signup: 'E-Mail bestätigen',
+    invite: 'Du wurdest eingeladen',
+    magiclink: 'Dein Login-Link',
+    recovery: 'Passwort zurücksetzen',
+    email_change: 'E-Mail-Änderung bestätigen',
+    reauthentication: 'Dein Bestätigungscode',
+  },
 }
 
 // Template mapping
@@ -217,6 +227,9 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
+  // Detect locale from user metadata (set during signup/magic link request)
+  const locale = (payload.data.user_metadata?.locale === 'de') ? 'de' : 'en'
+
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
@@ -226,6 +239,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
+    locale,
   }
 
   // Render React Email to HTML and plain text
@@ -258,7 +272,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       to: payload.data.email,
       from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+      subject: (EMAIL_SUBJECTS[locale] || EMAIL_SUBJECTS.en)[emailType] || 'Notification',
       html,
       text,
       purpose: 'transactional',
