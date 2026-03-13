@@ -220,6 +220,37 @@ const ProductsUploadPage = () => {
           </p>
         </div>
 
+        {/* File upload drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleFileDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+            dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"
+          }`}
+        >
+          <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+          <p className="text-sm font-medium text-foreground">Upload Excel or CSV file</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Drag & drop or click to browse — columns: brand, model, category, units
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground uppercase">or enter manually</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        </div>
+
         <div className="space-y-3">
           {/* Header */}
           <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_80px_40px] gap-2 text-xs font-medium text-muted-foreground uppercase">
