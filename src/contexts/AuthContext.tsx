@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,7 +52,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Cold start: orphan check is appropriate here
       const profileLinked = await checkProfile(session.user.id);
       if (!mounted) return;
 
@@ -66,7 +65,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // profileLinked === true or null (error → assume OK, don't destroy session)
       setSession(session);
       setUser(session.user);
       setHasProfile(profileLinked === true);
@@ -96,11 +94,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // Set loading=true while we verify the profile to prevent premature redirects
+        setLoading(true);
+
         const profileLinked = await checkProfile(session.user.id);
         if (!mounted) return;
 
         if (profileLinked === false && event === "INITIAL_SESSION") {
-          // Only sign out orphans on cold start, not mid-flow
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);

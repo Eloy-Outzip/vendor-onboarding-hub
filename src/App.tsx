@@ -19,9 +19,10 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const RootRedirect = () => {
-  const { loading, hasProfile } = useAuth();
+  const { loading, hasProfile, user } = useAuth();
   if (loading) return null;
   if (hasProfile) return <Navigate to="/profile" replace />;
+  if (user && !hasProfile) return <Navigate to="/join" replace />;
   return <LoginPage />;
 };
 
