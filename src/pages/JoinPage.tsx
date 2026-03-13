@@ -11,6 +11,9 @@ const JoinPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [magicEmail, setMagicEmail] = useState("");
+  const [magicLinkSending, setMagicLinkSending] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     companyName: "",
