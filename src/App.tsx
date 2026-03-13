@@ -3,11 +3,11 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import Index from "./pages/Index";
+
 import JoinPage from "./pages/JoinPage";
 import WelcomePage from "./pages/WelcomePage";
 import ProfilePage from "./pages/ProfilePage";
@@ -16,6 +16,12 @@ import ProductsUploadPage from "./pages/ProductsUploadPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const RootRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={user ? "/profile" : "/join"} replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -27,7 +33,7 @@ const App = () => (
           <AuthProvider>
             <LanguageSwitcher />
             <Routes>
-              <Route path="/" element={<Navigate to="/join" replace />} />
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/join" element={<JoinPage />} />
               <Route path="/welcome" element={<WelcomePage />} />
               <Route
