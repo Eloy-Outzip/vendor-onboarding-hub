@@ -5,11 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
 const JoinPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [magicEmail, setMagicEmail] = useState("");
   const [magicLinkSending, setMagicLinkSending] = useState(false);
@@ -34,7 +36,7 @@ const JoinPage = () => {
 
   const handleMagicLink = async () => {
     if (!magicEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(magicEmail)) {
-      toast.error("Please enter a valid email.");
+      toast.error(t("join.errorEmail"));
       return;
     }
     setMagicLinkSending(true);
@@ -47,7 +49,7 @@ const JoinPage = () => {
       if (error) throw error;
       setMagicLinkSent(true);
     } catch (err: any) {
-      toast.error(err.message || "Failed to send login link.");
+      toast.error(err.message || t("join.errorMagic"));
     } finally {
       setMagicLinkSending(false);
     }
@@ -57,17 +59,16 @@ const JoinPage = () => {
     e.preventDefault();
 
     if (!form.fullName.trim() || !form.companyName.trim() || !form.email.trim()) {
-      toast.error("Please fill in all required fields.");
+      toast.error(t("join.errorRequired"));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      toast.error("Please enter a valid email.");
+      toast.error(t("join.errorEmail"));
       return;
     }
 
     setSubmitting(true);
     try {
-      // Step 1: Insert vendor
       const { data: vendor, error: vendorError } = await supabase
         .from("vendors")
         .insert({
@@ -86,46 +87,36 @@ const JoinPage = () => {
 
       if (vendorError) throw vendorError;
 
-      // Step 2: Sign up with auto-generated password
       const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/profile`,
-        },
+        options: { emailRedirectTo: `${window.location.origin}/profile` },
       });
 
       if (authError) {
-        toast.error(
-          "Account creation failed. Please contact support or try again with a different email."
-        );
+        toast.error(t("join.errorAccount"));
         return;
       }
 
       const userId = authData.user?.id;
       if (!userId) {
-        toast.error(
-          "Account creation failed. Please contact support or try again with a different email."
-        );
+        toast.error(t("join.errorAccount"));
         return;
       }
 
-      // Step 3: Insert profile
       const { error: profileError } = await supabase
         .from("profiles" as any)
         .insert({ id: userId, email: form.email, vendor_id: vendor.id } as any);
 
       if (profileError) {
-        toast.error(
-          "Account creation failed. Please contact support or try again with a different email."
-        );
+        toast.error(t("join.errorAccount"));
         return;
       }
 
       navigate("/welcome");
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Please try again.");
+      toast.error(err.message || t("join.errorGeneric"));
     } finally {
       setSubmitting(false);
     }
@@ -138,138 +129,71 @@ const JoinPage = () => {
       <div className="mx-auto max-w-xl px-4 py-12 sm:py-20">
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Put your shop on the map
+            {t("join.title")}
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Customers are looking for gear near them. Be found.
-          </p>
+          <p className="mt-2 text-muted-foreground">{t("join.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full name *</Label>
-              <Input
-                id="fullName"
-                value={form.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-                placeholder="John Doe"
-                maxLength={100}
-              />
+              <Label htmlFor="fullName">{t("join.fullName")}</Label>
+              <Input id="fullName" value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder={t("join.fullNamePlaceholder")} maxLength={100} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company name *</Label>
-              <Input
-                id="companyName"
-                value={form.companyName}
-                onChange={(e) => update("companyName", e.target.value)}
-                placeholder="Alpine Rentals"
-                maxLength={100}
-              />
+              <Label htmlFor="companyName">{t("join.companyName")}</Label>
+              <Input id="companyName" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder={t("join.companyNamePlaceholder")} maxLength={100} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => update("email", e.target.value)}
-                placeholder="john@alpinerentals.com"
-                maxLength={255}
-              />
+              <Label htmlFor="email">{t("join.email")}</Label>
+              <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder={t("join.emailPlaceholder")} maxLength={255} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={form.phone}
-                onChange={(e) => update("phone", e.target.value)}
-                placeholder="+33 6 12 34 56 78"
-                maxLength={30}
-              />
+              <Label htmlFor="phone">{t("join.phone")}</Label>
+              <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder={t("join.phonePlaceholder")} maxLength={30} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website">Website</Label>
-            <Input
-              id="website"
-              value={form.website}
-              onChange={(e) => update("website", e.target.value)}
-              placeholder="https://alpinerentals.com"
-              maxLength={255}
-            />
+            <Label htmlFor="website">{t("join.website")}</Label>
+            <Input id="website" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder={t("join.websitePlaceholder")} maxLength={255} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Street address</Label>
-            <Input
-              id="address"
-              value={form.address}
-              onChange={(e) => update("address", e.target.value)}
-              placeholder="123 Mountain Road"
-              maxLength={255}
-            />
+            <Label htmlFor="address">{t("join.address")}</Label>
+            <Input id="address" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder={t("join.addressPlaceholder")} maxLength={255} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                value={form.city}
-                onChange={(e) => update("city", e.target.value)}
-                placeholder="Chamonix"
-                maxLength={100}
-              />
+              <Label htmlFor="city">{t("join.city")}</Label>
+              <Input id="city" value={form.city} onChange={(e) => update("city", e.target.value)} placeholder={t("join.cityPlaceholder")} maxLength={100} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
-                value={form.country}
-                onChange={(e) => update("country", e.target.value)}
-                placeholder="France"
-                maxLength={100}
-              />
+              <Label htmlFor="country">{t("join.country")}</Label>
+              <Input id="country" value={form.country} onChange={(e) => update("country", e.target.value)} placeholder={t("join.countryPlaceholder")} maxLength={100} />
             </div>
           </div>
 
           <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={submitting}>
-            {submitting ? "Submitting…" : "Join now →"}
+            {submitting ? t("common.submitting") : t("join.submit")}
           </Button>
         </form>
 
-        {/* Returning vendor login */}
         <div className="mt-12 border-t border-border pt-8">
-          <h2 className="text-lg font-semibold text-foreground">Returning vendor?</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Enter your email and we'll send you a login link.
-          </p>
+          <h2 className="text-lg font-semibold text-foreground">{t("join.returningTitle")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("join.returningSubtitle")}</p>
           <div className="mt-4 flex flex-col sm:flex-row gap-3">
-            <Input
-              type="email"
-              placeholder="you@company.com"
-              value={magicEmail}
-              onChange={(e) => setMagicEmail(e.target.value)}
-              className="sm:max-w-xs"
-            />
-            <Button
-              variant="outline"
-              disabled={magicLinkSending}
-              onClick={handleMagicLink}
-            >
-              {magicLinkSending ? "Sending…" : "Send login link"}
+            <Input type="email" placeholder={t("join.magicPlaceholder")} value={magicEmail} onChange={(e) => setMagicEmail(e.target.value)} className="sm:max-w-xs" />
+            <Button variant="outline" disabled={magicLinkSending} onClick={handleMagicLink}>
+              {magicLinkSending ? t("join.sendingLink") : t("join.sendLink")}
             </Button>
           </div>
           {magicLinkSent && (
-            <p className="mt-3 text-sm text-primary">
-              Check your email for a login link.
-            </p>
+            <p className="mt-3 text-sm text-primary">{t("join.magicSent")}</p>
           )}
         </div>
       </div>
