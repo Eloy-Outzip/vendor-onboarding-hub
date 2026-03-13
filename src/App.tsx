@@ -20,7 +20,8 @@ const queryClient = new QueryClient();
 const RootRedirect = () => {
   const { loading, hasProfile } = useAuth();
   if (loading) return null;
-  return <Navigate to={hasProfile ? "/profile" : "/join"} replace />;
+  if (hasProfile) return <Navigate to="/profile" replace />;
+  return <LoginPage />;
 };
 
 const App = () => (

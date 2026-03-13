@@ -96,6 +96,14 @@
     "imported": "Imported {count} product(s).",
     "skipped": "{count} rows were skipped (30 max)."
   },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Enter your email and we'll send you a login link.",
+    "noAccount": "Don't have an account?",
+    "joinLink": "Join now →",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Log in →"
+  },
   "notFound": {
     "title": "404",
     "message": "Oops! Page not found",

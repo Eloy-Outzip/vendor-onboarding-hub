@@ -202,18 +202,13 @@ const JoinPage = () => {
           </Button>
         </form>
 
-        <div className="mt-12 border-t border-border pt-8">
-          <h2 className="text-lg font-semibold text-foreground">{t("join.returningTitle")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("join.returningSubtitle")}</p>
-          <div className="mt-4 flex flex-col sm:flex-row gap-3">
-            <Input type="email" placeholder={t("join.magicPlaceholder")} value={magicEmail} onChange={(e) => setMagicEmail(e.target.value)} className="sm:max-w-xs" />
-            <Button variant="outline" disabled={magicLinkSending} onClick={handleMagicLink}>
-              {magicLinkSending ? t("join.sendingLink") : t("join.sendLink")}
-            </Button>
-          </div>
-          {magicLinkSent && (
-            <p className="mt-3 text-sm text-primary">{t("join.magicSent")}</p>
-          )}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            {t("login.alreadyHaveAccount")}{" "}
+            <a href="/" className="text-primary font-medium hover:underline">
+              {t("login.loginLink")}
+            </a>
+          </p>
         </div>
       </div>
     </div>
