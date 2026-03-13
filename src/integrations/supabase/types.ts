@@ -14,7 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          brand: string
+          category: string | null
+          channel: string | null
+          created_at: string
+          id: string
+          model: string
+          units: number | null
+          vendor_id: string
+        }
+        Insert: {
+          brand: string
+          category?: string | null
+          channel?: string | null
+          created_at?: string
+          id?: string
+          model: string
+          units?: number | null
+          vendor_id: string
+        }
+        Update: {
+          brand?: string
+          category?: string | null
+          channel?: string | null
+          created_at?: string
+          id?: string
+          model?: string
+          units?: number | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          categories: string[] | null
+          city: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          email: string
+          first_name: string
+          id: string
+          name: string
+          rents_equipment: boolean | null
+          status: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          categories?: string[] | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email: string
+          first_name: string
+          id?: string
+          name: string
+          rents_equipment?: boolean | null
+          status?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          categories?: string[] | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          name?: string
+          rents_equipment?: boolean | null
+          status?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
