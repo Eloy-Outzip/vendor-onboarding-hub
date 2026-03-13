@@ -32,6 +32,27 @@ const JoinPage = () => {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  const handleMagicLink = async () => {
+    if (!magicEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(magicEmail)) {
+      toast.error("Please enter a valid email.");
+      return;
+    }
+    setMagicLinkSending(true);
+    setMagicLinkSent(false);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicEmail,
+        options: { emailRedirectTo: `${window.location.origin}/profile` },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send login link.");
+    } finally {
+      setMagicLinkSending(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
