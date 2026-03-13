@@ -23,7 +23,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Navigate to="/join" replace />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/welcome" element={<WelcomePage />} />
             <Route
