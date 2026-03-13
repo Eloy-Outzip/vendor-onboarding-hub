@@ -37,7 +37,8 @@
     "errorEmail": "Please enter a valid email.",
     "errorAccount": "Account creation failed. Please contact support or try again with a different email.",
     "errorGeneric": "Something went wrong. Please try again.",
-    "errorMagic": "Failed to send login link."
+    "errorMagic": "Failed to send login link.",
+    "errorAccountNotFound": "No account found for this email. Please sign up first."
   },
   "welcome": {
     "title": "You're on the map! 🎉",

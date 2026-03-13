@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 const JoinPage = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { loading, hasProfile } = useAuth();
   const { t, locale } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [magicEmail, setMagicEmail] = useState("");
@@ -28,8 +28,8 @@ const JoinPage = () => {
   });
 
   useEffect(() => {
-    if (!loading && user) navigate("/profile", { replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && hasProfile) navigate("/profile", { replace: true });
+  }, [hasProfile, loading, navigate]);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -45,6 +45,7 @@ const JoinPage = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicEmail,
         options: {
+          shouldCreateUser: false,
           emailRedirectTo: `${window.location.origin}/profile`,
           data: { locale },
         },
@@ -52,7 +53,10 @@ const JoinPage = () => {
       if (error) throw error;
       setMagicLinkSent(true);
     } catch (err: any) {
-      toast.error(err.message || t("join.errorMagic"));
+      const msg = err.message?.toLowerCase().includes("signups not allowed")
+        ? t("join.errorAccountNotFound")
+        : err.message || t("join.errorMagic");
+      toast.error(msg);
     } finally {
       setMagicLinkSending(false);
     }
