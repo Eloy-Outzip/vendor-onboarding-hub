@@ -267,7 +267,7 @@ const JoinPage = () => {
             </Button>
           </div>
           {magicLinkSent && (
-            <p className="mt-3 text-sm text-green-600">
+            <p className="mt-3 text-sm text-primary">
               Check your email for a login link.
             </p>
           )}
