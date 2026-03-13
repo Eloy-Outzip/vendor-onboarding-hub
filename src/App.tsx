@@ -3,9 +3,15 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import JoinPage from "./pages/JoinPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Index from "./pages/Index";
+import JoinPage from "./pages/JoinPage";
+import WelcomePage from "./pages/WelcomePage";
+import ProfilePage from "./pages/ProfilePage";
+import ServicesPage from "./pages/ServicesPage";
+import ProductsUploadPage from "./pages/ProductsUploadPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -15,12 +21,38 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/join" element={<JoinPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/join" element={<JoinPage />} />
+            <Route path="/welcome" element={<WelcomePage />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/services"
+              element={
+                <ProtectedRoute>
+                  <ServicesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products-upload"
+              element={
+                <ProtectedRoute>
+                  <ProductsUploadPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
