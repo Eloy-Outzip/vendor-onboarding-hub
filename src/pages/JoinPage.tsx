@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const JoinPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [magicEmail, setMagicEmail] = useState("");
   const [magicLinkSending, setMagicLinkSending] = useState(false);
