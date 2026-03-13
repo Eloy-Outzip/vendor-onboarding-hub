@@ -94,7 +94,10 @@ const JoinPage = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/profile` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`,
+          data: { locale },
+        },
       });
 
       if (authError) {
