@@ -249,7 +249,6 @@ const ProductsUploadPage = () => {
           <span className="text-xs text-muted-foreground uppercase">or enter manually</span>
           <div className="h-px flex-1 bg-border" />
         </div>
-        </div>
 
         <div className="space-y-3">
           {/* Header */}
