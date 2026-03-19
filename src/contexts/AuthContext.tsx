@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profileLinked = await checkProfile(session.user.id);
 
         // Send login notification email (fire-and-forget, only on actual sign-in)
-        if (profileLinked === true && event === "SIGNED_IN") {
+        if ((profileLinked === true || profileLinked === null) && event === "SIGNED_IN") {
           supabase.functions.invoke("notify-login").catch(() => {});
         }
         if (!mounted) return;
@@ -123,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setSession(session);
         setUser(session.user);
-        setHasProfile(profileLinked === true);
+        setHasProfile(profileLinked !== false);
         setLoading(false);
       }
     );
