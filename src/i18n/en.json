@@ -94,7 +94,14 @@
     "fileNoRows": "No valid rows found. Expected columns: brand, model, category, units.",
     "fileParseError": "Could not parse the file. Please check the format.",
     "imported": "Imported {count} product(s).",
-    "skipped": "{count} rows were skipped (30 max)."
+    "skipped": "{count} rows were skipped (30 max).",
+    "addVariant": "+ Add variant",
+    "removeVariant": "Remove variant",
+    "variantType": "Type",
+    "variantValue": "Value",
+    "variantUnits": "Qty",
+    "variantTypePlaceholder": "e.g. Color, Size",
+    "variantValuePlaceholder": "e.g. Red, Large"
   },
   "login": {
     "title": "Welcome back",

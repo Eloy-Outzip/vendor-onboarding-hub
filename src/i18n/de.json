@@ -94,7 +94,14 @@
     "fileNoRows": "Keine gültigen Zeilen gefunden. Erwartete Spalten: brand, model, category, units.",
     "fileParseError": "Die Datei konnte nicht gelesen werden. Bitte überprüfe das Format.",
     "imported": "{count} Produkt(e) importiert.",
-    "skipped": "{count} Zeilen wurden übersprungen (max. 30)."
+    "skipped": "{count} Zeilen wurden übersprungen (max. 30).",
+    "addVariant": "+ Variante hinzufügen",
+    "removeVariant": "Variante entfernen",
+    "variantType": "Typ",
+    "variantValue": "Wert",
+    "variantUnits": "Anz.",
+    "variantTypePlaceholder": "z.B. Farbe, Größe",
+    "variantValuePlaceholder": "z.B. Rot, Groß"
   },
   "login": {
     "title": "Willkommen zurück",
