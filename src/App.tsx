@@ -18,8 +18,13 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const isEditorPreview = () =>
+  window.location.hostname.includes("lovableproject.com") ||
+  new URLSearchParams(window.location.search).has("__lovable_token");
+
 const RootRedirect = () => {
   const { loading, hasProfile, user } = useAuth();
+  if (isEditorPreview()) return <Navigate to="/profile" replace />;
   if (loading) return null;
   if (hasProfile) return <Navigate to="/profile" replace />;
   if (user && !hasProfile) return <Navigate to="/join" replace />;
