@@ -21,13 +21,19 @@ export const useAuth = () => useContext(AuthContext);
 // Exported ref so JoinPage can skip the orphan check during signup
 export const skipProfileCheck = { current: false };
 
-async function checkProfile(userId: string): Promise<boolean | null> {
+async function checkProfile(userId: string, retries = 1): Promise<boolean | null> {
   const { data, error } = await supabase
     .from("profiles" as any)
     .select("vendor_id")
     .eq("id", userId)
     .maybeSingle();
-  if (error) return null; // null = unknown, don't treat as orphan
+  if (error) {
+    if (retries > 0) {
+      await new Promise((r) => setTimeout(r, 1500));
+      return checkProfile(userId, retries - 1);
+    }
+    return null; // null = unknown after retry
+  }
   return !!(data as any)?.vendor_id;
 }
 
