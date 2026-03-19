@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
+import { isEditorPreview } from "@/lib/isEditorPreview";
 
 interface VendorRow {
   id: string;
