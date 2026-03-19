@@ -9,34 +9,39 @@ import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
 
-const slugify = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-
-interface Category { id: string; name: string; }
-
 const ServicesPage = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [vendorId, setVendorId] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      if (isEditorPreview()) { setVendorId("preview"); setLoading(false); }
+      if (isEditorPreview()) {
+        setVendorId("preview");
+        setCategories(["Sample Service"]);
+        setLoading(false);
+      }
       return;
     }
     const load = async () => {
       const { data: profile } = await supabase
-        .from("profiles" as any).select("vendor_id").eq("id", user.id).single();
-      const vid = (profile as any)?.vendor_id;
+        .from("profiles")
+        .select("vendor_id")
+        .eq("id", user.id)
+        .single();
+      const vid = profile?.vendor_id;
       if (!vid) { setLoading(false); return; }
       setVendorId(vid);
-      const { data } = await supabase
-        .from("categories" as any).select("id, name").eq("vendor_id", vid);
-      setCategories(((data as any) || []) as Category[]);
+      const { data: vendor } = await supabase
+        .from("vendors")
+        .select("categories")
+        .eq("id", vid)
+        .single();
+      setCategories(vendor?.categories || []);
       setLoading(false);
     };
     load();
@@ -45,19 +50,32 @@ const ServicesPage = () => {
   const addCategory = async () => {
     const name = newName.trim();
     if (!name || !vendorId) return;
-    const { data, error } = await supabase
-      .from("categories" as any)
-      .insert({ vendor_id: vendorId, name, slug: slugify(name) } as any)
-      .select("id, name").single();
-    if (error) { toast.error(error.message); return; }
-    setCategories([...categories, data as any]);
+    if (categories.includes(name)) {
+      toast.error("Category already exists");
+      return;
+    }
+    const updated = [...categories, name];
+    if (vendorId !== "preview") {
+      const { error } = await supabase
+        .from("vendors")
+        .update({ categories: updated })
+        .eq("id", vendorId);
+      if (error) { toast.error(error.message); return; }
+    }
+    setCategories(updated);
     setNewName("");
   };
 
-  const removeCategory = async (id: string) => {
-    const { error } = await supabase.from("categories" as any).delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    setCategories(categories.filter((c) => c.id !== id));
+  const removeCategory = async (name: string) => {
+    const updated = categories.filter((c) => c !== name);
+    if (vendorId && vendorId !== "preview") {
+      const { error } = await supabase
+        .from("vendors")
+        .update({ categories: updated })
+        .eq("id", vendorId);
+      if (error) { toast.error(error.message); return; }
+    }
+    setCategories(updated);
   };
 
   if (loading) {
@@ -74,9 +92,9 @@ const ServicesPage = () => {
 
         <div className="flex flex-wrap gap-2">
           {categories.map((cat) => (
-            <span key={cat.id} className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-sm font-medium">
-              {cat.name}
-              <button onClick={() => removeCategory(cat.id)} className="text-muted-foreground hover:text-destructive">
+            <span key={cat} className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-sm font-medium">
+              {cat}
+              <button onClick={() => removeCategory(cat)} className="text-muted-foreground hover:text-destructive">
                 <X className="h-3.5 w-3.5" />
               </button>
             </span>
