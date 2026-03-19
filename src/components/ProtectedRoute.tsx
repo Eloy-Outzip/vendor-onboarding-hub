@@ -2,9 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
 
-const isEditorPreview = () =>
-  window.location.hostname.includes("lovableproject.com") ||
-  new URLSearchParams(window.location.search).has("__lovable_token");
+import { isEditorPreview } from "@/lib/isEditorPreview";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { loading, hasProfile, user } = useAuth();

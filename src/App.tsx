@@ -18,9 +18,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const isEditorPreview = () =>
-  window.location.hostname.includes("lovableproject.com") ||
-  new URLSearchParams(window.location.search).has("__lovable_token");
+import { isEditorPreview } from "@/lib/isEditorPreview";
 
 const RootRedirect = () => {
   const { loading, hasProfile, user } = useAuth();

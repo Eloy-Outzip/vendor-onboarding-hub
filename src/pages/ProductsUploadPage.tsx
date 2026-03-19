@@ -27,7 +27,10 @@ const ProductsUploadPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      if (isEditorPreview()) { setVendorId("preview"); setVendorName("Preview Vendor"); setLoading(false); }
+      return;
+    }
     const load = async () => {
       const { data: profile } = await supabase
         .from("profiles" as any).select("vendor_id").eq("id", user.id).single();

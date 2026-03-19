@@ -38,7 +38,14 @@ const ProfilePage = () => {
   });
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      if (isEditorPreview()) {
+        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, country: null, status: "active" });
+        setForm({ first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: "", website: "", address: "", city: "", country: "" });
+        setLoading(false);
+      }
+      return;
+    }
     const load = async () => {
       try {
         const { data: profile, error: profileError } = await supabase
