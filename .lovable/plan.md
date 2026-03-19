@@ -1,37 +1,37 @@
 
 
-## Fix: Pages Stuck on "Loading" in Editor Preview
+## Fix: Wire /services Page to vendors.categories Column
 
 ### Problem
-In the editor preview, `user` is `null` (no real auth session). The `ProtectedRoute` correctly bypasses auth, but the pages themselves (`ProductsUploadPage`, `ServicesPage`, `ProfilePage`) all have `useEffect` blocks that bail early with `if (!user) return;` — never calling `setLoading(false)`. This leaves the page stuck on "Loading…" forever.
+`ServicesPage.tsx` reads/writes to a `categories` table that was deleted. The `as any` casts suppress TypeScript errors, but all inserts/deletes silently fail. No service data is being saved.
 
 ### Solution
-Add the same `isEditorPreview()` check inside each page's data-loading `useEffect`. When in editor preview with no user, skip the data fetch and set `loading = false` immediately so the page renders with empty/mock state.
+Rewrite `ServicesPage.tsx` to read and write the `categories` text array on the `vendors` table instead.
 
-### Files to modify
+### Changes (single file: `src/pages/ServicesPage.tsx`)
 
-**`src/pages/ProductsUploadPage.tsx`** — In the `useEffect`, handle the case where `!user` in editor preview by setting `loading = false` and a dummy `vendorId`:
+1. **Load**: Fetch the vendor's `categories` array from the `vendors` table using the user's `vendor_id` from their profile
+2. **Add category**: Update the vendor row by appending to the `categories` array
+3. **Remove category**: Update the vendor row by filtering out the removed category
+4. **State**: Replace the `Category[]` state with a simple `string[]` since categories are now just strings, not separate rows with IDs
+
+### Technical approach
 ```typescript
-useEffect(() => {
-  if (!user) {
-    if (isEditorPreview()) {
-      setVendorId("preview");
-      setVendorName("Preview Vendor");
-      setLoading(false);
-    }
-    return;
-  }
-  // ...existing load logic
-}, [user]);
+// Load
+const { data: vendor } = await supabase
+  .from("vendors").select("categories").eq("id", vid).single();
+setCategories(vendor?.categories || []);
+
+// Add
+await supabase.from("vendors")
+  .update({ categories: [...categories, name] })
+  .eq("id", vendorId);
+
+// Remove
+await supabase.from("vendors")
+  .update({ categories: categories.filter(c => c !== name) })
+  .eq("id", vendorId);
 ```
 
-**`src/pages/ProfilePage.tsx`** and **`src/pages/ServicesPage.tsx`** — Same pattern: when `!user` and `isEditorPreview()`, set `loading = false` with placeholder data so the UI renders.
-
-### Helper
-Extract the shared `isEditorPreview()` into a small utility (e.g. `src/lib/isEditorPreview.ts`) so all files use the same function instead of duplicating it.
-
-### Files
-- Create: `src/lib/isEditorPreview.ts`
-- Modify: `src/pages/ProductsUploadPage.tsx`, `src/pages/ProfilePage.tsx`, `src/pages/ServicesPage.tsx`
-- Optionally update `src/components/ProtectedRoute.tsx` and `src/App.tsx` to import from the shared utility
+No database migration needed — the `vendors.categories` column already exists.
 
