@@ -1,29 +1,37 @@
 
 
-## Fix: Allow Editor Preview to Access Protected Pages
+## Fix: Pages Stuck on "Loading" in Editor Preview
 
 ### Problem
-Every time you navigate or the preview reloads in the Lovable editor, you get redirected to the login page. This happens because the editor preview runs on a different domain (`lovableproject.com`) than your published app (`lovable.app`), so there is no stored authentication session. Since all your main pages are behind `ProtectedRoute`, you can't see them while editing.
+In the editor preview, `user` is `null` (no real auth session). The `ProtectedRoute` correctly bypasses auth, but the pages themselves (`ProductsUploadPage`, `ServicesPage`, `ProfilePage`) all have `useEffect` blocks that bail early with `if (!user) return;` — never calling `setLoading(false)`. This leaves the page stuck on "Loading…" forever.
 
 ### Solution
-Detect when the app is running inside the Lovable editor preview and bypass the auth redirect so you can work on protected pages. The published production app will continue to require login as normal.
-
-### How it works
-- Check for the `__lovable_token` URL parameter (present only in editor previews) OR the `lovableproject.com` hostname
-- When detected, `ProtectedRoute` renders children directly instead of redirecting
-- `RootRedirect` navigates to `/profile` instead of showing login
-- Production (`lovable.app` / custom domains) is completely unaffected
+Add the same `isEditorPreview()` check inside each page's data-loading `useEffect`. When in editor preview with no user, skip the data fetch and set `loading = false` immediately so the page renders with empty/mock state.
 
 ### Files to modify
-- `src/components/ProtectedRoute.tsx` — skip auth check in editor preview
-- `src/App.tsx` — skip auth check in `RootRedirect` for editor preview
 
-### Technical detail
+**`src/pages/ProductsUploadPage.tsx`** — In the `useEffect`, handle the case where `!user` in editor preview by setting `loading = false` and a dummy `vendorId`:
 ```typescript
-const isEditorPreview = () =>
-  window.location.hostname.includes('lovableproject.com') ||
-  new URLSearchParams(window.location.search).has('__lovable_token');
+useEffect(() => {
+  if (!user) {
+    if (isEditorPreview()) {
+      setVendorId("preview");
+      setVendorName("Preview Vendor");
+      setLoading(false);
+    }
+    return;
+  }
+  // ...existing load logic
+}, [user]);
 ```
 
-This is a development-only convenience. No security impact since the editor preview is not your production environment.
+**`src/pages/ProfilePage.tsx`** and **`src/pages/ServicesPage.tsx`** — Same pattern: when `!user` and `isEditorPreview()`, set `loading = false` with placeholder data so the UI renders.
+
+### Helper
+Extract the shared `isEditorPreview()` into a small utility (e.g. `src/lib/isEditorPreview.ts`) so all files use the same function instead of duplicating it.
+
+### Files
+- Create: `src/lib/isEditorPreview.ts`
+- Modify: `src/pages/ProductsUploadPage.tsx`, `src/pages/ProfilePage.tsx`, `src/pages/ServicesPage.tsx`
+- Optionally update `src/components/ProtectedRoute.tsx` and `src/App.tsx` to import from the shared utility
 
