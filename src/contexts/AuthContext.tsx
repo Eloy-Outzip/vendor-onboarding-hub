@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profileLinked = await checkProfile(session.user.id);
       if (!mounted) return;
 
-      if (profileLinked === false) {
+      if (profileLinked === false && !skipProfileCheck.current) {
         // Confirmed orphan — sign out
         await supabase.auth.signOut();
         setSession(null);
@@ -71,9 +71,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // null (error) → benefit of doubt, treat as valid
       setSession(session);
       setUser(session.user);
-      setHasProfile(profileLinked === true);
+      setHasProfile(profileLinked !== false);
       setLoading(false);
     };
 
