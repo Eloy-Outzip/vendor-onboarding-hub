@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
+import { isEditorPreview } from "@/lib/isEditorPreview";
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -23,7 +24,10 @@ const ServicesPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      if (isEditorPreview()) { setVendorId("preview"); setLoading(false); }
+      return;
+    }
     const load = async () => {
       const { data: profile } = await supabase
         .from("profiles" as any).select("vendor_id").eq("id", user.id).single();

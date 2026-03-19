@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, ChevronDown, ChevronRight } from "lucide-react";
+import { isEditorPreview } from "@/lib/isEditorPreview";
 import * as XLSX from "xlsx";
 
 interface VariantRow { type: string; value: string; units: number; }
@@ -26,7 +27,10 @@ const ProductsUploadPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      if (isEditorPreview()) { setVendorId("preview"); setVendorName("Preview Vendor"); setLoading(false); }
+      return;
+    }
     const load = async () => {
       const { data: profile } = await supabase
         .from("profiles" as any).select("vendor_id").eq("id", user.id).single();
