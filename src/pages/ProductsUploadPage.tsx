@@ -6,11 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Trash2, Upload, ChevronDown, ChevronRight } from "lucide-react";
 import * as XLSX from "xlsx";
 
-interface ProductRow { brand: string; model: string; category: string; units: number; }
-const emptyRow = (): ProductRow => ({ brand: "", model: "", category: "", units: 1 });
+interface VariantRow { type: string; value: string; units: number; }
+interface ProductRow { brand: string; model: string; category: string; units: number; variants: VariantRow[]; expanded: boolean; }
+
+const emptyVariant = (): VariantRow => ({ type: "", value: "", units: 1 });
+const emptyRow = (): ProductRow => ({ brand: "", model: "", category: "", units: 1, variants: [], expanded: false });
 
 const ProductsUploadPage = () => {
   const { user } = useAuth();
@@ -40,12 +43,34 @@ const ProductsUploadPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  const updateRow = (i: number, field: keyof ProductRow, value: string | number) => {
+  const updateRow = (i: number, field: keyof ProductRow, value: any) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
   };
 
   const addRow = () => { if (rows.length >= 30) return; setRows([...rows, emptyRow()]); };
   const removeRow = (i: number) => { if (rows.length === 1) return; setRows(rows.filter((_, idx) => idx !== i)); };
+
+  const addVariant = (i: number) => {
+    setRows((prev) => prev.map((r, idx) =>
+      idx === i ? { ...r, variants: [...r.variants, emptyVariant()], expanded: true } : r
+    ));
+  };
+
+  const updateVariant = (rowIdx: number, varIdx: number, field: keyof VariantRow, value: any) => {
+    setRows((prev) => prev.map((r, ri) =>
+      ri === rowIdx ? { ...r, variants: r.variants.map((v, vi) => vi === varIdx ? { ...v, [field]: value } : v) } : r
+    ));
+  };
+
+  const removeVariant = (rowIdx: number, varIdx: number) => {
+    setRows((prev) => prev.map((r, ri) =>
+      ri === rowIdx ? { ...r, variants: r.variants.filter((_, vi) => vi !== varIdx) } : r
+    ));
+  };
+
+  const toggleExpanded = (i: number) => {
+    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, expanded: !r.expanded } : r));
+  };
 
   const parseFile = useCallback((file: File) => {
     const reader = new FileReader();
@@ -58,16 +83,56 @@ const ProductsUploadPage = () => {
 
         if (json.length === 0) { toast.error(t("products.fileEmpty")); return; }
 
-        const parsed: ProductRow[] = json.map((row) => {
-          const normalized: Record<string, any> = {};
-          Object.keys(row).forEach((k) => { normalized[k.toLowerCase().trim()] = row[k]; });
-          return {
-            brand: String(normalized.brand || "").trim(),
-            model: String(normalized.model || "").trim(),
-            category: String(normalized.category || "").trim(),
-            units: parseInt(normalized.units) || 1,
-          };
-        }).filter((r) => r.brand || r.model || r.category);
+        // Group rows: if variant_type column exists, group by brand+model+category
+        const hasVariants = json.some((row) => {
+          const keys = Object.keys(row).map(k => k.toLowerCase().trim());
+          return keys.includes("variant_type");
+        });
+
+        const parsed: ProductRow[] = [];
+
+        if (hasVariants) {
+          const grouped = new Map<string, ProductRow>();
+          json.forEach((row) => {
+            const n: Record<string, any> = {};
+            Object.keys(row).forEach((k) => { n[k.toLowerCase().trim()] = row[k]; });
+            const key = `${n.brand || ""}|${n.model || ""}|${n.category || ""}`;
+            if (!grouped.has(key)) {
+              grouped.set(key, {
+                brand: String(n.brand || "").trim(),
+                model: String(n.model || "").trim(),
+                category: String(n.category || "").trim(),
+                units: parseInt(n.units) || 1,
+                variants: [],
+                expanded: false,
+              });
+            }
+            const vType = String(n.variant_type || "").trim();
+            const vValue = String(n.variant_value || "").trim();
+            if (vType || vValue) {
+              grouped.get(key)!.variants.push({
+                type: vType,
+                value: vValue,
+                units: parseInt(n.variant_units) || parseInt(n.units) || 1,
+              });
+            }
+          });
+          grouped.forEach((v) => { if (v.brand || v.model || v.category) parsed.push(v); });
+        } else {
+          json.forEach((row) => {
+            const n: Record<string, any> = {};
+            Object.keys(row).forEach((k) => { n[k.toLowerCase().trim()] = row[k]; });
+            const r: ProductRow = {
+              brand: String(n.brand || "").trim(),
+              model: String(n.model || "").trim(),
+              category: String(n.category || "").trim(),
+              units: parseInt(n.units) || 1,
+              variants: [],
+              expanded: false,
+            };
+            if (r.brand || r.model || r.category) parsed.push(r);
+          });
+        }
 
         if (parsed.length === 0) { toast.error(t("products.fileNoRows")); return; }
 
@@ -106,21 +171,50 @@ const ProductsUploadPage = () => {
 
     setSubmitting(true);
     try {
-      const { error: prodError } = await supabase.from("products").insert(
+      // Insert products and get back IDs
+      const { data: insertedProducts, error: prodError } = await supabase.from("products").insert(
         valid.map((r) => ({
           vendor_id: vendorId, brand: r.brand.trim(), model: r.model.trim(),
-          category: r.category.trim(), units: r.units, channel: "rental", status: "pending",
+          category: r.category.trim(), units: r.variants.length > 0 ? null : r.units,
+          channel: "rental", status: "pending",
         }))
-      );
+      ).select("id");
       if (prodError) throw prodError;
 
+      // Insert variants
+      if (insertedProducts) {
+        const variantInserts: { product_id: string; variant_type: string; variant_value: string; units: number }[] = [];
+        valid.forEach((r, i) => {
+          r.variants.forEach((v) => {
+            if (v.type.trim() || v.value.trim()) {
+              variantInserts.push({
+                product_id: insertedProducts[i].id,
+                variant_type: v.type.trim(),
+                variant_value: v.value.trim(),
+                units: v.units,
+              });
+            }
+          });
+        });
+        if (variantInserts.length > 0) {
+          const { error: varError } = await supabase.from("product_variants" as any).insert(variantInserts);
+          if (varError) throw varError;
+        }
+      }
+
+      // Webhook
       try {
         const webhookUrl = import.meta.env.VITE_PRODUCT_WEBHOOK_URL;
         if (webhookUrl) {
-          const csvHeader = "vendor_id,vendor_name,brand,model,category,units";
-          const csvRows = valid.map((r) =>
-            `${vendorId},${csvEscape(vendorName)},${csvEscape(r.brand)},${csvEscape(r.model)},${csvEscape(r.category)},${r.units}`
-          ).join("\n");
+          const csvHeader = "vendor_id,vendor_name,brand,model,category,units,variant_type,variant_value,variant_units";
+          const csvRows = valid.flatMap((r) => {
+            if (r.variants.length === 0) {
+              return [`${vendorId},${csvEscape(vendorName)},${csvEscape(r.brand)},${csvEscape(r.model)},${csvEscape(r.category)},${r.units},,,`];
+            }
+            return r.variants.map((v) =>
+              `${vendorId},${csvEscape(vendorName)},${csvEscape(r.brand)},${csvEscape(r.model)},${csvEscape(r.category)},,${csvEscape(v.type)},${csvEscape(v.value)},${v.units}`
+            );
+          }).join("\n");
           await fetch(webhookUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: csvHeader + "\n" + csvRows });
         }
       } catch { console.warn("Webhook POST failed — continuing."); }
@@ -140,7 +234,7 @@ const ProductsUploadPage = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:py-20 space-y-8">
+      <div className="mx-auto max-w-4xl px-4 py-12 sm:py-20 space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("products.title")}</h1>
           <p className="mt-2 text-muted-foreground">{t("products.subtitle")}</p>
@@ -175,13 +269,64 @@ const ProductsUploadPage = () => {
           </div>
 
           {rows.map((row, i) => (
-            <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_80px_40px] gap-2">
-              <Input placeholder={t("products.brandPlaceholder")} value={row.brand} onChange={(e) => updateRow(i, "brand", e.target.value)} />
-              <Input placeholder={t("products.modelPlaceholder")} value={row.model} onChange={(e) => updateRow(i, "model", e.target.value)} />
-              <Input placeholder={t("products.categoryPlaceholder")} value={row.category} onChange={(e) => updateRow(i, "category", e.target.value)} />
-              <Input type="number" min={1} value={row.units} onChange={(e) => updateRow(i, "units", parseInt(e.target.value) || 1)} />
-              <Button variant="ghost" size="icon" onClick={() => removeRow(i)} disabled={rows.length === 1} className="text-muted-foreground">
-                <Trash2 className="h-4 w-4" />
+            <div key={i} className="rounded-lg border border-border bg-card p-3 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_80px_40px] gap-2">
+                <Input placeholder={t("products.brandPlaceholder")} value={row.brand} onChange={(e) => updateRow(i, "brand", e.target.value)} />
+                <Input placeholder={t("products.modelPlaceholder")} value={row.model} onChange={(e) => updateRow(i, "model", e.target.value)} />
+                <Input placeholder={t("products.categoryPlaceholder")} value={row.category} onChange={(e) => updateRow(i, "category", e.target.value)} />
+                <Input
+                  type="number" min={1} value={row.variants.length > 0 ? "" : row.units}
+                  onChange={(e) => updateRow(i, "units", parseInt(e.target.value) || 1)}
+                  disabled={row.variants.length > 0}
+                  placeholder={row.variants.length > 0 ? "—" : "1"}
+                />
+                <Button variant="ghost" size="icon" onClick={() => removeRow(i)} disabled={rows.length === 1} className="text-muted-foreground">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Variants section */}
+              {row.variants.length > 0 && (
+                <button
+                  onClick={() => toggleExpanded(i)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {row.expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                  {row.variants.length} variant{row.variants.length > 1 ? "s" : ""}
+                </button>
+              )}
+
+              {(row.expanded || row.variants.length === 0 ? true : false) && row.variants.length > 0 && (
+                <div className="ml-4 space-y-2 border-l-2 border-muted pl-4">
+                  {row.variants.map((v, vi) => (
+                    <div key={vi} className="grid grid-cols-[1fr_1fr_80px_32px] gap-2">
+                      <Input
+                        placeholder={t("products.variantTypePlaceholder")}
+                        value={v.type}
+                        onChange={(e) => updateVariant(i, vi, "type", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Input
+                        placeholder={t("products.variantValuePlaceholder")}
+                        value={v.value}
+                        onChange={(e) => updateVariant(i, vi, "value", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Input
+                        type="number" min={1} value={v.units}
+                        onChange={(e) => updateVariant(i, vi, "units", parseInt(e.target.value) || 1)}
+                        className="h-8 text-sm"
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => removeVariant(i, vi)} className="h-8 w-8 text-muted-foreground">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Button variant="ghost" size="sm" onClick={() => addVariant(i)} className="text-xs text-muted-foreground h-7 px-2">
+                <Plus className="h-3 w-3 mr-1" /> {t("products.addVariant")}
               </Button>
             </div>
           ))}

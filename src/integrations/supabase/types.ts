@@ -14,38 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      categories: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          slug: string | null
-          vendor_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          slug?: string | null
-          vendor_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          slug?: string | null
-          vendor_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categories_vendor_id_fkey"
-            columns: ["vendor_id"]
-            isOneToOne: false
-            referencedRelation: "vendors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       email_send_log: {
         Row: {
           created_at: string
@@ -132,6 +100,41 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      product_variants: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          units: number
+          variant_type: string
+          variant_value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          units?: number
+          variant_type: string
+          variant_value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          units?: number
+          variant_type?: string
+          variant_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
