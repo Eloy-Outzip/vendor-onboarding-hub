@@ -69,7 +69,7 @@
   "services": {
     "title": "What do you offer?",
     "subtitle": "Tell us what describes your business the best, your services or your expertise.",
-    "placeholder": "e.g. Tents, Lighting, AV Equipment",
+    "placeholder": "e.g. Tents, hiking poles, snow shoes, etc.",
     "backToProfile": "← Back to profile"
   },
   "products": {
