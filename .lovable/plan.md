@@ -1,31 +1,29 @@
 
 
-## Fix: Keep Session Alive Within Browser Session
+## Fix: Allow Editor Preview to Access Protected Pages
 
 ### Problem
-The Supabase client already persists sessions in `localStorage`. However, the `AuthContext` profile-check logic is too aggressive:
-1. In `init()`: if `checkProfile()` returns `null` (network error), it sets `hasProfile = false` → redirect to `/join`
-2. In `onAuthStateChange` with `INITIAL_SESSION`: if profile check returns `false`, it signs the user out entirely
+Every time you navigate or the preview reloads in the Lovable editor, you get redirected to the login page. This happens because the editor preview runs on a different domain (`lovableproject.com`) than your published app (`lovable.app`), so there is no stored authentication session. Since all your main pages are behind `ProtectedRoute`, you can't see them while editing.
 
-Both cause valid logged-in users to lose their session on page reload or navigation.
+### Solution
+Detect when the app is running inside the Lovable editor preview and bypass the auth redirect so you can work on protected pages. The published production app will continue to require login as normal.
 
-### Fix (single file: `src/contexts/AuthContext.tsx`)
-
-1. **In `init()`**: When `checkProfile()` returns `null` (error/unknown), treat it as "probably valid" (`hasProfile = true`) instead of `false`. This prevents transient network issues from locking users out. The worst case is a brief moment where an orphan sees a protected page before the next successful check corrects it.
-
-2. **In `onAuthStateChange`**: Same treatment — if profile check returns `null`, assume `true` and let the user through rather than signing them out.
-
-3. **Add a retry mechanism**: If `checkProfile` fails, retry once after a short delay before giving up.
-
-### Technical Detail
-
-```text
-checkProfile returns:
-  true  → confirmed profile exists → hasProfile = true
-  false → confirmed no profile    → hasProfile = false (orphan handling)
-  null  → error/unknown           → hasProfile = true (benefit of doubt)
-```
+### How it works
+- Check for the `__lovable_token` URL parameter (present only in editor previews) OR the `lovableproject.com` hostname
+- When detected, `ProtectedRoute` renders children directly instead of redirecting
+- `RootRedirect` navigates to `/profile` instead of showing login
+- Production (`lovable.app` / custom domains) is completely unaffected
 
 ### Files to modify
-- `src/contexts/AuthContext.tsx` — adjust null handling in both `init()` and `onAuthStateChange`
+- `src/components/ProtectedRoute.tsx` — skip auth check in editor preview
+- `src/App.tsx` — skip auth check in `RootRedirect` for editor preview
+
+### Technical detail
+```typescript
+const isEditorPreview = () =>
+  window.location.hostname.includes('lovableproject.com') ||
+  new URLSearchParams(window.location.search).has('__lovable_token');
+```
+
+This is a development-only convenience. No security impact since the editor preview is not your production environment.
 
