@@ -1,63 +1,31 @@
 
 
-## Enhance Product Upload with Variants + Merge Categories
+## Fix: Keep Session Alive Within Browser Session
 
-### Current State
-- `products` table has: brand, model, category (text), units, vendor_id
-- `categories` table exists separately with: name, slug, vendor_id — but category is already a text field on products
-- No variant support
+### Problem
+The Supabase client already persists sessions in `localStorage`. However, the `AuthContext` profile-check logic is too aggressive:
+1. In `init()`: if `checkProfile()` returns `null` (network error), it sets `hasProfile = false` → redirect to `/join`
+2. In `onAuthStateChange` with `INITIAL_SESSION`: if profile check returns `false`, it signs the user out entirely
 
-### Plan
+Both cause valid logged-in users to lose their session on page reload or navigation.
 
-**1. Database Migration**
+### Fix (single file: `src/contexts/AuthContext.tsx`)
 
-- Create `product_variants` table:
-  - `id` (uuid, PK)
-  - `product_id` (uuid, FK → products.id, ON DELETE CASCADE)
-  - `variant_type` (text) — e.g. "Color", "Size", "Shape"
-  - `variant_value` (text) — e.g. "Red", "Large", "Round"
-  - `units` (integer, default 1)
-  - `created_at` (timestamptz)
-- RLS: same pattern as products (public insert + select)
-- Drop `categories` table (category is already stored as text on products; the separate table is redundant)
+1. **In `init()`**: When `checkProfile()` returns `null` (error/unknown), treat it as "probably valid" (`hasProfile = true`) instead of `false`. This prevents transient network issues from locking users out. The worst case is a brief moment where an orphan sees a protected page before the next successful check corrects it.
 
-**2. Update `ProductsUploadPage.tsx`**
+2. **In `onAuthStateChange`**: Same treatment — if profile check returns `null`, assume `true` and let the user through rather than signing them out.
 
-- Expand `ProductRow` interface to include an array of variants:
-  ```text
-  { brand, model, category, units, variants: [{ type, value, units }] }
-  ```
-- Each product row gets an expandable "Add variant" button
-- When variants exist, units are per-variant; when no variants, units are at product level
-- On submit: insert products first, then bulk-insert variants referencing the returned product IDs
-- File import: support optional columns `variant_type`, `variant_value`, `variant_units`
+3. **Add a retry mechanism**: If `checkProfile` fails, retry once after a short delay before giving up.
 
-**3. Update webhook CSV**
-
-- Add variant columns to the CSV payload: `variant_type`, `variant_value`, `variant_units`
-- Each variant becomes its own CSV row (product fields repeated)
-
-**4. Update translations (en.json + de.json)**
-
-- Add keys: `products.variantType`, `products.variantValue`, `products.variantUnits`, `products.addVariant`, `products.removeVariant`, placeholders
-
-### UI Layout (per product row)
+### Technical Detail
 
 ```text
-┌──────────┬──────────┬──────────┬───────┬───┐
-│ Brand    │ Model    │ Category │ Units │ 🗑 │
-├──────────┴──────────┴──────────┴───────┴───┤
-│  + Add variant                              │
-│  ┌────────────┬────────────┬───────┬───┐   │
-│  │ Type: Color│ Value: Red │ Qty:5 │ 🗑 │   │
-│  └────────────┴────────────┴───────┴───┘   │
-└─────────────────────────────────────────────┘
+checkProfile returns:
+  true  → confirmed profile exists → hasProfile = true
+  false → confirmed no profile    → hasProfile = false (orphan handling)
+  null  → error/unknown           → hasProfile = true (benefit of doubt)
 ```
 
-When variants are present, the product-level Units field becomes disabled/hidden (units tracked per variant).
-
-### Files to create/modify
-- **Migration**: Create `product_variants` table, drop `categories` table
-- **Modify**: `src/pages/ProductsUploadPage.tsx`
-- **Modify**: `src/i18n/en.json`, `src/i18n/de.json`
+### Files to modify
+- `src/contexts/AuthContext.tsx` — adjust null handling in both `init()` and `onAuthStateChange`
 
