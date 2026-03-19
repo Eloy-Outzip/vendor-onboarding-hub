@@ -21,13 +21,19 @@ export const useAuth = () => useContext(AuthContext);
 // Exported ref so JoinPage can skip the orphan check during signup
 export const skipProfileCheck = { current: false };
 
-async function checkProfile(userId: string): Promise<boolean | null> {
+async function checkProfile(userId: string, retries = 1): Promise<boolean | null> {
   const { data, error } = await supabase
     .from("profiles" as any)
     .select("vendor_id")
     .eq("id", userId)
     .maybeSingle();
-  if (error) return null; // null = unknown, don't treat as orphan
+  if (error) {
+    if (retries > 0) {
+      await new Promise((r) => setTimeout(r, 1500));
+      return checkProfile(userId, retries - 1);
+    }
+    return null; // null = unknown after retry
+  }
   return !!(data as any)?.vendor_id;
 }
 
@@ -55,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profileLinked = await checkProfile(session.user.id);
       if (!mounted) return;
 
-      if (profileLinked === false) {
+      if (profileLinked === false && !skipProfileCheck.current) {
         // Confirmed orphan — sign out
         await supabase.auth.signOut();
         setSession(null);
@@ -65,9 +71,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // null (error) → benefit of doubt, treat as valid
       setSession(session);
       setUser(session.user);
-      setHasProfile(profileLinked === true);
+      setHasProfile(profileLinked !== false);
       setLoading(false);
     };
 
@@ -100,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profileLinked = await checkProfile(session.user.id);
 
         // Send login notification email (fire-and-forget, only on actual sign-in)
-        if (profileLinked === true && event === "SIGNED_IN") {
+        if ((profileLinked === true || profileLinked === null) && event === "SIGNED_IN") {
           supabase.functions.invoke("notify-login").catch(() => {});
         }
         if (!mounted) return;
@@ -116,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setSession(session);
         setUser(session.user);
-        setHasProfile(profileLinked === true);
+        setHasProfile(profileLinked !== false);
         setLoading(false);
       }
     );
