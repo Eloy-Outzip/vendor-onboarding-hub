@@ -37,7 +37,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <LanguageSwitcher />
+            
             <Routes>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/join" element={<JoinPage />} />
