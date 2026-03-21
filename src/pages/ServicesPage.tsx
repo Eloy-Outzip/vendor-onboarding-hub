@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
+import AppHeader from "@/components/AppHeader";
 
 const ServicesPage = () => {
   const { user } = useAuth();
