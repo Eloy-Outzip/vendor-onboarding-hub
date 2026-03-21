@@ -61,6 +61,17 @@
     "errorMagic": "Login-Link konnte nicht gesendet werden.",
     "errorAccountNotFound": "Kein Konto für diese E-Mail gefunden. Bitte registriere dich zuerst."
   },
+  "steps": {
+    "title": "So funktioniert's",
+    "step1Title": "Eintragen",
+    "step1Desc": "Shopname, Ort und Sortiment. Dauert 2 Minuten.",
+    "step2Title": "Wir übernehmen",
+    "step2Desc": "Eintrag auf der Outzip-Karte, verknüpft mit deinem Google Maps-Profil.",
+    "step3Title": "Kunden finden dich",
+    "step3Desc": "Ein Klick auf deinen Pin führt direkt zu deinem Google Maps-Eintrag.",
+    "note": "Du füllst das Formular aus. Den Rest erledigen wir.",
+    "tip": "Ein Google Maps-Eintrag macht dich noch sichtbarer — falls du noch keinen hast, helfen wir dir dabei."
+  },
   "welcome": {
     "title": "Du bist auf der Karte! 🎉",
     "subtitle": "Prüfe deine E-Mails, um dein Konto zu bestätigen und auf dein Anbieterprofil zuzugreifen.",
