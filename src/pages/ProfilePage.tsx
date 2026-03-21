@@ -102,7 +102,7 @@ const ProfilePage = () => {
   }
 
   const step2Done = categories.length > 0;
-  const step3Done = ["products_submitted", "active"].includes(vendor.status);
+  const step3Done = ["products_submitted", "active"].includes(vendor.status) && products.length > 0;
   const progress = 33 + (step2Done ? 33 : 0) + (step3Done ? 34 : 0);
 
   return (
