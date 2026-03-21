@@ -41,7 +41,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) {
       if (isEditorPreview()) {
-        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, country: null, status: "active" });
+        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, country: null, status: "pending" });
         setForm({ first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: "", website: "", address: "", city: "", country: "" });
         setLoading(false);
       }
