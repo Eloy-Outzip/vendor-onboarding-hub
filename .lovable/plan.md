@@ -1,23 +1,24 @@
 
 
-## Fix Category Storage in Vendors Table
+## Fix: Products Section Incorrectly Marked as Done
 
 ### Problem
-Categories are currently stored using **translated display labels** (e.g., "Zelte" in German, "Tents" in English). If a user registers in English, categories are saved as "Tents", but if in German, as "Zelte". This makes data inconsistent.
-
-All other fields (shopName, city, website, email) are already correctly saved to the vendors table.
+The products completion check uses `vendor.status` only:
+```tsx
+const step3Done = ["products_submitted", "active"].includes(vendor.status);
+```
+This means any vendor with status `"active"` shows products as done, even if they have zero products. In the editor preview, the hardcoded vendor has `status: "active"`, so it always appears complete.
 
 ### Solution
-Store category **keys** (e.g., `"catTents"`, `"catSleepingBags"`) instead of translated labels. This ensures consistent data regardless of language.
+Change the check to require **both** the correct status **and** at least one product:
 
-### File: `src/pages/JoinPage.tsx`
+```tsx
+const step3Done = ["products_submitted", "active"].includes(vendor.status) && products.length > 0;
+```
 
-1. Change `toggleCategory` to use the category **key** instead of the translated label
-2. Update the checkbox `checked` to compare against keys
-3. Update the insert to send keys as the categories array
+Also update the preview mock to use `status: "pending"` so the editor preview shows realistic incomplete state.
 
-This is a small change — roughly 3 lines modified in the toggle/checkbox logic.
-
-### No database changes needed
-The `vendors.categories` column is already a text array and will accept keys just as well as labels.
+### File: `src/pages/ProfilePage.tsx`
+- Line ~104: Update `step3Done` logic
+- Line ~47: Change preview mock status from `"active"` to `"pending"`
 
