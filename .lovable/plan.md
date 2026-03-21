@@ -1,37 +1,68 @@
 
 
-## Fix: Wire /services Page to vendors.categories Column
+## Redesign /join Page — Outzip Partner Landing Page
 
-### Problem
-`ServicesPage.tsx` reads/writes to a `categories` table that was deleted. The `as any` casts suppress TypeScript errors, but all inserts/deletes silently fail. No service data is being saved.
+### Overview
+Transform the current plain registration form into a branded, conversion-optimized landing page with the Outzip identity: navy hero, trust pills, category checkboxes, and a success state.
 
-### Solution
-Rewrite `ServicesPage.tsx` to read and write the `categories` text array on the `vendors` table instead.
+### Design System Updates
 
-### Changes (single file: `src/pages/ServicesPage.tsx`)
+**`src/index.css`** — Add custom CSS variables for the new brand colors:
+- Navy: `#0F2A38` (background hero)
+- Orange: `#F56A00` (already primary)
+- Lime: `#E2E71B` (accents, success state)
+- Cream: `#F4F2EC` (page background)
 
-1. **Load**: Fetch the vendor's `categories` array from the `vendors` table using the user's `vendor_id` from their profile
-2. **Add category**: Update the vendor row by appending to the `categories` array
-3. **Remove category**: Update the vendor row by filtering out the removed category
-4. **State**: Replace the `Category[]` state with a simple `string[]` since categories are now just strings, not separate rows with IDs
+**`tailwind.config.ts`** — Add named colors: `navy`, `lime`, `cream` for easy use in Tailwind classes.
 
-### Technical approach
-```typescript
-// Load
-const { data: vendor } = await supabase
-  .from("vendors").select("categories").eq("id", vid).single();
-setCategories(vendor?.categories || []);
+### Page Structure (`src/pages/JoinPage.tsx`)
 
-// Add
-await supabase.from("vendors")
-  .update({ categories: [...categories, name] })
-  .eq("id", vendorId);
+Complete redesign with these sections:
 
-// Remove
-await supabase.from("vendors")
-  .update({ categories: categories.filter(c => c !== name) })
-  .eq("id", vendorId);
-```
+1. **Top bar** — Outzip logo/text left, "Outdoor-Verleih Karte · 2025" right. Simple, minimal.
 
-No database migration needed — the `vendors.categories` column already exists.
+2. **Hero section** — Full-width navy background. Large headline + subline. Below: a stylized SVG map strip with location pins, one pulsing lime pin with "Du könntest hier sein" label. CSS animation for the pulse.
+
+3. **Trust pills row** — 4 horizontal pills: 🗺️ Kostenloser Eintrag · ✉️ Kein Newsletter · 🔒 Kein Vertrag · 🙋 Du entscheidest
+
+4. **Registration form card** — White card on cream background. Simplified fields:
+   - Shopname (maps to `companyName`/`name`)
+   - Stadt (maps to `city`)
+   - Website (optional)
+   - E-Mail
+   - Checkbox grid (2 columns): ⛺ Zelte / 🌙 Schlafsäcke / 🎒 Rucksäcke / 🚴 Fahrräder · E-Bikes / 🏔️ Winter · Ski / 📦 Sonstiges
+   - Selected checkboxes get saved to `vendors.categories`
+   - CTA button: "Jetzt auf der Karte erscheinen →" in orange
+
+5. **Success state** — After submit, replace form with lime checkmark + "Danke, [Shopname]! Wir melden uns innerhalb von 24 Stunden."
+
+6. **Footer** — Navy background, minimal: © 2025 Outzip · Datenschutz · Impressum
+
+### Form Logic Changes
+- Remove fields: `fullName`, `phone`, `address`, `country` from the form (simplify signup friction)
+- Keep `fullName` mapped from companyName or set a sensible default for `first_name`
+- Add `categories` state as `string[]` from checkbox selections
+- On submit: insert vendor with selected categories, then create auth + profile as before
+- Add `showSuccess` state to toggle between form and success message
+
+### Translation Updates
+**`src/i18n/en.json`** and **`src/i18n/de.json`** — Add/update keys for:
+- Hero headline/subline
+- Trust pill texts
+- Category checkbox labels (Zelte, Schlafsäcke, Rucksäcke, Fahrräder, Winter/Ski, Sonstiges)
+- Success message with `{shopname}` interpolation
+- Footer links
+
+### Files to modify
+- `src/index.css` — brand color variables
+- `tailwind.config.ts` — named colors
+- `src/pages/JoinPage.tsx` — full redesign
+- `src/i18n/en.json` — new translation keys
+- `src/i18n/de.json` — new translation keys
+
+### Mobile-first
+- Single column layout on small screens
+- Hero text stacked, map strip hidden or simplified on mobile
+- Form card full-width with proper padding
+- Under 2 scrolls on desktop
 
