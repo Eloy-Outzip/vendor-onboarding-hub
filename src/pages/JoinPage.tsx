@@ -7,8 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, skipProfileCheck } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
-import { MapPin, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 const CATEGORY_KEYS = [
   { key: "catTents", emoji: "⛺" },
@@ -127,8 +128,11 @@ const JoinPage = () => {
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
       <header className="bg-navy text-cream px-4 sm:px-8 py-4 flex items-center justify-between">
-        <span className="text-xl font-bold tracking-tight">Outzip</span>
-        <span className="text-sm opacity-70 hidden sm:block">{t("join.topBarTag")}</span>
+        <img src="/outzip-logo.svg" alt="Outzip" className="h-8" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).insertAdjacentText('afterend', 'Outzip'); }} />
+        <div className="flex items-center gap-3">
+          <span className="text-sm opacity-70 hidden sm:block">{t("join.topBarTag")}</span>
+          <LanguageSwitcher variant="inline" />
+        </div>
       </header>
 
       {/* Hero */}
@@ -141,22 +145,35 @@ const JoinPage = () => {
             {t("join.heroSubtitle")}
           </p>
 
-          {/* Map strip */}
-          <div className="mt-10 relative flex items-end justify-center gap-6 sm:gap-10">
-            {/* Decorative pins */}
-            <MapPin className="h-6 w-6 opacity-30" />
-            <MapPin className="h-6 w-6 opacity-20" />
-            <div className="relative flex flex-col items-center">
-              <span className="text-xs font-medium text-lime mb-1 animate-pulse">
-                {t("join.mapPinLabel")}
-              </span>
-              <MapPin className="h-8 w-8 text-lime animate-bounce" style={{ animationDuration: "2s" }} />
-            </div>
-            <MapPin className="h-6 w-6 opacity-25" />
-            <MapPin className="h-6 w-6 opacity-15" />
+          {/* Inline SVG map of Germany */}
+          <div className="mt-10 relative flex justify-center">
+            <svg viewBox="0 0 300 380" className="w-48 sm:w-64 h-auto" xmlns="http://www.w3.org/2000/svg">
+              {/* Germany outline (simplified) */}
+              <path
+                d="M150 10 L180 30 L200 25 L220 45 L240 50 L260 80 L270 120 L265 150 L280 180 L270 210 L250 230 L260 260 L240 280 L220 300 L200 310 L180 330 L160 350 L140 360 L120 340 L100 320 L80 290 L70 260 L60 230 L50 200 L55 170 L45 140 L50 110 L60 80 L80 50 L100 30 L120 20 Z"
+                fill="none"
+                stroke="#F4F2EC"
+                strokeWidth="2"
+                opacity="0.3"
+              />
+              {/* Regular pins */}
+              <circle cx="180" cy="100" r="4" fill="#F4F2EC" opacity="0.3" />
+              <circle cx="120" cy="160" r="4" fill="#F4F2EC" opacity="0.25" />
+              <circle cx="200" cy="200" r="4" fill="#F4F2EC" opacity="0.3" />
+              <circle cx="100" cy="260" r="4" fill="#F4F2EC" opacity="0.2" />
+              <circle cx="220" cy="150" r="4" fill="#F4F2EC" opacity="0.25" />
+              {/* Highlighted lime pin */}
+              <circle cx="155" cy="220" r="12" fill="#E2E71B" opacity="0.2">
+                <animate attributeName="r" values="12;18;12" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.2;0.05;0.2" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="155" cy="220" r="6" fill="#E2E71B" />
+            </svg>
+            {/* Label for the lime pin */}
+            <span className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 translate-y-full text-xs font-medium text-lime animate-pulse whitespace-nowrap">
+              {t("join.mapPinLabel")}
+            </span>
           </div>
-          {/* Decorative line */}
-          <div className="mt-2 mx-auto max-w-md h-0.5 bg-cream/10 rounded-full" />
         </div>
       </section>
 
@@ -285,9 +302,9 @@ const JoinPage = () => {
       <footer className="bg-navy text-cream/60 px-4 py-6 text-center text-sm flex flex-wrap items-center justify-center gap-2">
         <span>© 2025 Outzip</span>
         <span>·</span>
-        <span>{t("join.footerPrivacy")}</span>
+        <a href={`https://outzip.de/${locale}/help?header=3`} target="_blank" rel="noopener noreferrer" className="hover:text-cream transition-colors">{t("join.footerPrivacy")}</a>
         <span>·</span>
-        <span>{t("join.footerImprint")}</span>
+        <a href={`https://outzip.de/${locale}/help?header=4`} target="_blank" rel="noopener noreferrer" className="hover:text-cream transition-colors">{t("join.footerImprint")}</a>
       </footer>
     </div>
   );
