@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AppHeader from "@/components/AppHeader";
 
 const NotFound = () => {
   const location = useLocation();
