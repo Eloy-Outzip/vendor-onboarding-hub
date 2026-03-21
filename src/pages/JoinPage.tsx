@@ -7,8 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, skipProfileCheck } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
-import { MapPin, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 const CATEGORY_KEYS = [
   { key: "catTents", emoji: "⛺" },
