@@ -61,6 +61,17 @@
     "errorMagic": "Failed to send login link.",
     "errorAccountNotFound": "No account found for this email. Please sign up first."
   },
+  "steps": {
+    "title": "How it works",
+    "step1Title": "Sign up",
+    "step1Desc": "Shop name, location, and assortment. Takes 2 minutes.",
+    "step2Title": "We take care of the rest",
+    "step2Desc": "We create your listing on the Outzip map, linked to your Google Maps profile.",
+    "step3Title": "Customers find you",
+    "step3Desc": "One click on your pin leads straight to your Google Maps listing.",
+    "note": "You fill out the form. We handle the rest.",
+    "tip": "A Google Maps listing makes you even more visible — if you don't have one yet, we'll help you set it up."
+  },
   "welcome": {
     "title": "You're on the map! 🎉",
     "subtitle": "Check your email to confirm your account and access your vendor profile.",

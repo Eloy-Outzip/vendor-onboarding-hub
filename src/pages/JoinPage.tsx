@@ -195,16 +195,29 @@ const JoinPage = () => {
         </div>
       </div>
 
-      {/* Trust banner */}
-      <div className="bg-cream px-4 py-3">
-        <p className="text-center text-sm text-navy/60 whitespace-nowrap overflow-x-auto">
-          {[
-            t("join.trustFree"),
-            t("join.trustNoNewsletter"),
-            t("join.trustNoContract"),
-            t("join.trustYouDecide"),
-          ].join("  ·  ")}
-        </p>
+      {/* How it works */}
+      <div className="bg-cream px-4 py-10 sm:py-14">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-center text-lg font-bold text-navy mb-8">{t("steps.title")}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-navy text-cream flex items-center justify-center text-sm font-bold">
+                  {n}
+                </span>
+                <div>
+                  <p className="font-semibold text-navy text-sm">{t(`steps.step${n}Title`)}</p>
+                  <p className="text-sm text-navy/60 mt-0.5">{t(`steps.step${n}Desc`)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-sm text-navy/50 mt-8">{t("steps.note")}</p>
+          <div className="mt-4 mx-auto max-w-lg flex items-start gap-2.5 rounded-lg border border-lime/40 bg-lime/10 px-4 py-3">
+            <Lightbulb className="h-4 w-4 text-navy/60 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-navy/70">{t("steps.tip")}</p>
+          </div>
+        </div>
       </div>
 
       {/* Form / Success */}
