@@ -19,6 +19,7 @@ const WelcomePage = () => {
           <Link to="/profile">{t("welcome.cta")}</Link>
         </Button>
       </div>
+      </div>
     </div>
   );
 };

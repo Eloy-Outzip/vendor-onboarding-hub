@@ -107,6 +107,7 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
+      <AppHeader />
       <div className="mx-auto max-w-2xl px-4 py-12 sm:py-20 space-y-10">
         <div>
           <div className="flex items-center justify-between mb-2">

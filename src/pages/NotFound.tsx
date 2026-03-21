@@ -22,6 +22,7 @@ const NotFound = () => {
           {t("notFound.home")}
         </a>
       </div>
+      </div>
     </div>
   );
 };
