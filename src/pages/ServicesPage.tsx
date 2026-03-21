@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
+import AppHeader from "@/components/AppHeader";
 
 const ServicesPage = () => {
   const { user } = useAuth();
@@ -84,6 +85,7 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
+      <AppHeader />
       <div className="mx-auto max-w-xl px-4 py-12 sm:py-20 space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("services.title")}</h1>

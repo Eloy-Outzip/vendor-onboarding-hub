@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import AppHeader from "@/components/AppHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
@@ -50,7 +51,9 @@ const LoginPage = () => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
+      <AppHeader />
+      <div className="flex-1 flex items-center justify-center">
       <div className="mx-auto max-w-md w-full px-4">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -82,6 +85,7 @@ const LoginPage = () => {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );
