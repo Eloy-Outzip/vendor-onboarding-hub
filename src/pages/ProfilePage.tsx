@@ -41,7 +41,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) {
       if (isEditorPreview()) {
-        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, country: null, status: "active" });
+        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, country: null, status: "pending" });
         setForm({ first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: "", website: "", address: "", city: "", country: "" });
         setLoading(false);
       }
@@ -102,7 +102,7 @@ const ProfilePage = () => {
   }
 
   const step2Done = categories.length > 0;
-  const step3Done = ["products_submitted", "active"].includes(vendor.status);
+  const step3Done = ["products_submitted", "active"].includes(vendor.status) && products.length > 0;
   const progress = 33 + (step2Done ? 33 : 0) + (step3Done ? 34 : 0);
 
   return (
