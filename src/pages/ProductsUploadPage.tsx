@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, ChevronDown, ChevronRight } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
+import AppHeader from "@/components/AppHeader";
 import * as XLSX from "xlsx";
 
 interface VariantRow { type: string; value: string; units: number; }
