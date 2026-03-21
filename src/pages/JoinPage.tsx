@@ -136,7 +136,7 @@ const JoinPage = () => {
       </header>
 
       {/* Hero */}
-      <section className="bg-navy text-cream px-4 sm:px-8 pt-12 pb-16 sm:pt-20 sm:pb-24">
+      <section className="bg-navy text-cream px-4 sm:px-8 pt-12 pb-0 sm:pt-20 sm:pb-0">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-3xl sm:text-5xl font-bold leading-tight tracking-tight">
             {t("join.heroTitle")}
@@ -144,38 +144,55 @@ const JoinPage = () => {
           <p className="mt-4 text-lg sm:text-xl opacity-80 max-w-xl mx-auto">
             {t("join.heroSubtitle")}
           </p>
+        </div>
+      </section>
 
-          {/* Inline SVG map of Germany */}
-          <div className="mt-10 relative flex justify-center">
-            <svg viewBox="0 0 300 380" className="w-48 sm:w-64 h-auto" xmlns="http://www.w3.org/2000/svg">
-              {/* Germany outline (simplified) */}
-              <path
-                d="M150 10 L180 30 L200 25 L220 45 L240 50 L260 80 L270 120 L265 150 L280 180 L270 210 L250 230 L260 260 L240 280 L220 300 L200 310 L180 330 L160 350 L140 360 L120 340 L100 320 L80 290 L70 260 L60 230 L50 200 L55 170 L45 140 L50 110 L60 80 L80 50 L100 30 L120 20 Z"
-                fill="none"
-                stroke="#F4F2EC"
-                strokeWidth="2"
-                opacity="0.3"
-              />
-              {/* Regular pins */}
-              <circle cx="180" cy="100" r="4" fill="#F4F2EC" opacity="0.3" />
-              <circle cx="120" cy="160" r="4" fill="#F4F2EC" opacity="0.25" />
-              <circle cx="200" cy="200" r="4" fill="#F4F2EC" opacity="0.3" />
-              <circle cx="100" cy="260" r="4" fill="#F4F2EC" opacity="0.2" />
-              <circle cx="220" cy="150" r="4" fill="#F4F2EC" opacity="0.25" />
-              {/* Highlighted lime pin */}
-              <circle cx="155" cy="220" r="12" fill="#E2E71B" opacity="0.2">
-                <animate attributeName="r" values="12;18;12" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.2;0.05;0.2" dur="2s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="155" cy="220" r="6" fill="#E2E71B" />
-            </svg>
-            {/* Label for the lime pin */}
-            <span className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 translate-y-full text-xs font-medium text-lime animate-pulse whitespace-nowrap">
+      {/* Map banner */}
+      <div className="relative w-full overflow-hidden" style={{ height: '180px' }}>
+        {/* Navy to cream gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy/80 to-cream" />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(244,242,236,1) 1px, transparent 1px), linear-gradient(90deg, rgba(244,242,236,1) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        {/* Pins */}
+        <div className="relative h-full max-w-5xl mx-auto">
+          {/* Verleih Hamburg */}
+          <div className="absolute left-[12%] top-[28%] flex flex-col items-center gap-1">
+            <div className="w-3 h-3 rounded-full border-2 border-cream/40 bg-transparent" />
+            <span className="text-[11px] text-cream/40 font-medium whitespace-nowrap hidden sm:block">Verleih Hamburg</span>
+          </div>
+          {/* OutdoorBerlin */}
+          <div className="absolute left-[38%] top-[20%] flex flex-col items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-primary" />
+            <span className="text-[11px] font-semibold text-cream bg-primary px-2.5 py-0.5 rounded whitespace-nowrap hidden sm:block">OutdoorBerlin</span>
+          </div>
+          {/* Highlighted pin — Du könntest hier sein */}
+          <div className="absolute left-[46%] top-[48%] flex flex-col items-center gap-1">
+            <div className="relative">
+              <div className="absolute -inset-2 rounded-full bg-lime/20 animate-ping" />
+              <div className="w-3.5 h-3.5 rounded-full bg-lime border-2 border-lime/50 relative z-10" />
+            </div>
+            <span className="text-[12px] font-bold text-navy bg-lime px-3 py-1 rounded whitespace-nowrap relative z-10">
               {t("join.mapPinLabel")}
             </span>
           </div>
+          {/* Bergwelt München */}
+          <div className="absolute right-[12%] top-[22%] flex flex-col items-center gap-1">
+            <div className="w-3 h-3 rounded-full border-2 border-cream/30 bg-transparent" />
+            <span className="text-[11px] text-cream/35 font-medium whitespace-nowrap hidden sm:block">Bergwelt München</span>
+          </div>
+          {/* Alpine Gear */}
+          <div className="absolute right-[6%] top-[50%] flex flex-col items-center gap-1">
+            <div className="w-3 h-3 rounded-full border-2 border-cream/25 bg-transparent" />
+            <span className="text-[11px] text-cream/30 font-medium whitespace-nowrap hidden sm:block">Alpine Gear</span>
+          </div>
         </div>
-      </section>
+      </div>
 
       {/* Trust banner */}
       <div className="bg-cream px-4 py-3">
