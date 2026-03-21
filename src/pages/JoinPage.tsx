@@ -296,8 +296,8 @@ const JoinPage = () => {
                         className="flex items-center gap-2 cursor-pointer rounded-lg border border-border px-3 py-2.5 hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5"
                       >
                         <Checkbox
-                          checked={selectedCategories.includes(label)}
-                          onCheckedChange={() => toggleCategory(label)}
+                          checked={selectedCategories.includes(key)}
+                          onCheckedChange={() => toggleCategory(key)}
                         />
                         <span className="text-sm">
                           {emoji} {label}
