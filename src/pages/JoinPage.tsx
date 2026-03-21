@@ -3,26 +3,35 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, skipProfileCheck } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { MapPin, Check } from "lucide-react";
+
+const CATEGORY_KEYS = [
+  { key: "catTents", emoji: "⛺" },
+  { key: "catSleepingBags", emoji: "🌙" },
+  { key: "catBackpacks", emoji: "🎒" },
+  { key: "catBikes", emoji: "🚴" },
+  { key: "catWinter", emoji: "🏔️" },
+  { key: "catOther", emoji: "📦" },
+] as const;
 
 const JoinPage = () => {
   const navigate = useNavigate();
   const { loading, hasProfile } = useAuth();
   const { t, locale } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [form, setForm] = useState({
-    fullName: "",
-    companyName: "",
-    email: "",
-    phone: "",
-    website: "",
-    address: "",
+    shopName: "",
     city: "",
-    country: "",
+    website: "",
+    email: "",
   });
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loading && hasProfile) navigate("/profile", { replace: true });
@@ -31,12 +40,16 @@ const JoinPage = () => {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.fullName.trim() || !form.companyName.trim() || !form.email.trim()) {
+    if (!form.shopName.trim() || !form.city.trim() || !form.email.trim()) {
       toast.error(t("join.errorRequired"));
       return;
     }
@@ -50,14 +63,12 @@ const JoinPage = () => {
       const { data: vendor, error: vendorError } = await supabase
         .from("vendors")
         .insert({
-          first_name: form.fullName,
-          name: form.companyName,
+          first_name: form.shopName,
+          name: form.shopName,
           email: form.email,
-          phone: form.phone || null,
           website: form.website || null,
-          address: form.address || null,
           city: form.city || null,
-          country: form.country || null,
+          categories: selectedCategories.length > 0 ? selectedCategories : null,
           status: "pending",
         })
         .select("id")
@@ -67,7 +78,6 @@ const JoinPage = () => {
 
       const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
 
-      // Prevent AuthContext from signing out the new session before profile is created
       skipProfileCheck.current = true;
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -96,7 +106,6 @@ const JoinPage = () => {
         .from("profiles" as any)
         .insert({ id: userId, email: form.email, vendor_id: vendor.id } as any);
 
-      // Profile created (or failed) — re-enable orphan detection
       skipProfileCheck.current = false;
 
       if (profileError) {
@@ -104,7 +113,7 @@ const JoinPage = () => {
         return;
       }
 
-      navigate("/welcome");
+      setShowSuccess(true);
     } catch (err: any) {
       toast.error(err.message || t("join.errorGeneric"));
     } finally {
@@ -115,73 +124,171 @@ const JoinPage = () => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-xl px-4 py-12 sm:py-20">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            {t("join.title")}
+    <div className="min-h-screen flex flex-col">
+      {/* Top bar */}
+      <header className="bg-navy text-cream px-4 sm:px-8 py-4 flex items-center justify-between">
+        <span className="text-xl font-bold tracking-tight">Outzip</span>
+        <span className="text-sm opacity-70 hidden sm:block">{t("join.topBarTag")}</span>
+      </header>
+
+      {/* Hero */}
+      <section className="bg-navy text-cream px-4 sm:px-8 pt-12 pb-16 sm:pt-20 sm:pb-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <h1 className="text-3xl sm:text-5xl font-bold leading-tight tracking-tight">
+            {t("join.heroTitle")}
           </h1>
-          <p className="mt-2 text-muted-foreground">{t("join.subtitle")}</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">{t("join.fullName")}</Label>
-              <Input id="fullName" value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder={t("join.fullNamePlaceholder")} maxLength={100} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="companyName">{t("join.companyName")}</Label>
-              <Input id="companyName" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder={t("join.companyNamePlaceholder")} maxLength={100} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("join.email")}</Label>
-              <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder={t("join.emailPlaceholder")} maxLength={255} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">{t("join.phone")}</Label>
-              <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder={t("join.phonePlaceholder")} maxLength={30} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="website">{t("join.website")}</Label>
-            <Input id="website" value={form.website} onChange={(e) => update("website", e.target.value)} placeholder={t("join.websitePlaceholder")} maxLength={255} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">{t("join.address")}</Label>
-            <Input id="address" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder={t("join.addressPlaceholder")} maxLength={255} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="city">{t("join.city")}</Label>
-              <Input id="city" value={form.city} onChange={(e) => update("city", e.target.value)} placeholder={t("join.cityPlaceholder")} maxLength={100} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="country">{t("join.country")}</Label>
-              <Input id="country" value={form.country} onChange={(e) => update("country", e.target.value)} placeholder={t("join.countryPlaceholder")} maxLength={100} />
-            </div>
-          </div>
-
-          <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={submitting}>
-            {submitting ? t("common.submitting") : t("join.submit")}
-          </Button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            {t("login.alreadyHaveAccount")}{" "}
-            <a href="/" className="text-primary font-medium hover:underline">
-              {t("login.loginLink")}
-            </a>
+          <p className="mt-4 text-lg sm:text-xl opacity-80 max-w-xl mx-auto">
+            {t("join.heroSubtitle")}
           </p>
+
+          {/* Map strip */}
+          <div className="mt-10 relative flex items-end justify-center gap-6 sm:gap-10">
+            {/* Decorative pins */}
+            <MapPin className="h-6 w-6 opacity-30" />
+            <MapPin className="h-6 w-6 opacity-20" />
+            <div className="relative flex flex-col items-center">
+              <span className="text-xs font-medium text-lime mb-1 animate-pulse">
+                {t("join.mapPinLabel")}
+              </span>
+              <MapPin className="h-8 w-8 text-lime animate-bounce" style={{ animationDuration: "2s" }} />
+            </div>
+            <MapPin className="h-6 w-6 opacity-25" />
+            <MapPin className="h-6 w-6 opacity-15" />
+          </div>
+          {/* Decorative line */}
+          <div className="mt-2 mx-auto max-w-md h-0.5 bg-cream/10 rounded-full" />
+        </div>
+      </section>
+
+      {/* Trust pills */}
+      <div className="bg-cream px-4 py-6">
+        <div className="mx-auto max-w-2xl flex flex-wrap items-center justify-center gap-3">
+          {[
+            { emoji: "🗺️", key: "trustFree" },
+            { emoji: "✉️", key: "trustNoNewsletter" },
+            { emoji: "🔒", key: "trustNoContract" },
+            { emoji: "🙋", key: "trustYouDecide" },
+          ].map(({ emoji, key }) => (
+            <span
+              key={key}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground"
+            >
+              <span>{emoji}</span>
+              {t(`join.${key}`)}
+            </span>
+          ))}
         </div>
       </div>
+
+      {/* Form / Success */}
+      <main className="flex-1 bg-cream px-4 py-10 sm:py-16">
+        <div className="mx-auto max-w-lg">
+          {showSuccess ? (
+            <div className="rounded-2xl bg-background p-8 sm:p-12 text-center shadow-lg">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-lime">
+                <Check className="h-8 w-8 text-navy" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">
+                {t("join.successTitle").replace("{shopname}", form.shopName)}
+              </h2>
+              <p className="mt-2 text-muted-foreground">{t("join.successSubtitle")}</p>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-2xl bg-background p-6 sm:p-10 shadow-lg space-y-5"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="shopName">{t("join.shopName")}</Label>
+                <Input
+                  id="shopName"
+                  value={form.shopName}
+                  onChange={(e) => update("shopName", e.target.value)}
+                  placeholder={t("join.shopNamePlaceholder")}
+                  maxLength={100}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">{t("join.city")}</Label>
+                  <Input
+                    id="city"
+                    value={form.city}
+                    onChange={(e) => update("city", e.target.value)}
+                    placeholder={t("join.cityPlaceholder")}
+                    maxLength={100}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">{t("join.website")}</Label>
+                  <Input
+                    id="website"
+                    value={form.website}
+                    onChange={(e) => update("website", e.target.value)}
+                    placeholder={t("join.websitePlaceholder")}
+                    maxLength={255}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">{t("join.email")}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  placeholder={t("join.emailPlaceholder")}
+                  maxLength={255}
+                />
+              </div>
+
+              {/* Category checkboxes */}
+              <div className="space-y-3">
+                <Label>{t("join.categoriesLabel")}</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {CATEGORY_KEYS.map(({ key, emoji }) => {
+                    const label = t(`join.${key}`);
+                    return (
+                      <label
+                        key={key}
+                        className="flex items-center gap-2 cursor-pointer rounded-lg border border-border px-3 py-2.5 hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                      >
+                        <Checkbox
+                          checked={selectedCategories.includes(label)}
+                          onCheckedChange={() => toggleCategory(label)}
+                        />
+                        <span className="text-sm">
+                          {emoji} {label}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full text-base font-semibold"
+                disabled={submitting}
+              >
+                {submitting ? t("common.submitting") : t("join.submit")}
+              </Button>
+            </form>
+          )}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-navy text-cream/60 px-4 py-6 text-center text-sm flex flex-wrap items-center justify-center gap-2">
+        <span>© 2025 Outzip</span>
+        <span>·</span>
+        <span>{t("join.footerPrivacy")}</span>
+        <span>·</span>
+        <span>{t("join.footerImprint")}</span>
+      </footer>
     </div>
   );
 };

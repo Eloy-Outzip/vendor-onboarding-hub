@@ -57,6 +57,9 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        navy: "hsl(var(--navy))",
+        lime: "hsl(var(--lime))",
+        cream: "hsl(var(--cream))",
       },
       borderRadius: {
         lg: "var(--radius)",
