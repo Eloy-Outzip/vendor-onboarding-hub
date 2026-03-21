@@ -1,10 +1,16 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const LanguageSwitcher = () => {
+interface LanguageSwitcherProps {
+  variant?: "fixed" | "inline";
+}
+
+const LanguageSwitcher = ({ variant = "fixed" }: LanguageSwitcherProps) => {
   const { locale, setLocale } = useLanguage();
 
+  const positionClass = variant === "fixed" ? "fixed top-4 right-4 z-50" : "";
+
   return (
-    <div className="fixed top-4 right-4 z-50 flex rounded-full border bg-background shadow-sm text-xs font-medium overflow-hidden">
+    <div className={`${positionClass} flex rounded-full border bg-background shadow-sm text-xs font-medium overflow-hidden`}>
       <button
         onClick={() => setLocale("en")}
         className={`px-3 py-1.5 transition-colors ${

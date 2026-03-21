@@ -302,9 +302,9 @@ const JoinPage = () => {
       <footer className="bg-navy text-cream/60 px-4 py-6 text-center text-sm flex flex-wrap items-center justify-center gap-2">
         <span>© 2025 Outzip</span>
         <span>·</span>
-        <span>{t("join.footerPrivacy")}</span>
+        <a href={`https://outzip.de/${locale}/help?header=3`} target="_blank" rel="noopener noreferrer" className="hover:text-cream transition-colors">{t("join.footerPrivacy")}</a>
         <span>·</span>
-        <span>{t("join.footerImprint")}</span>
+        <a href={`https://outzip.de/${locale}/help?header=4`} target="_blank" rel="noopener noreferrer" className="hover:text-cream transition-colors">{t("join.footerImprint")}</a>
       </footer>
     </div>
   );
