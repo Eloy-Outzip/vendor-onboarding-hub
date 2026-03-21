@@ -1,68 +1,45 @@
 
 
-## Redesign /join Page — Outzip Partner Landing Page
+## Improve /join Page — Links, Map, Logo, Language Switcher
 
-### Overview
-Transform the current plain registration form into a branded, conversion-optimized landing page with the Outzip identity: navy hero, trust pills, category checkboxes, and a success state.
+### 1. Footer links — locale-aware hrefs
 
-### Design System Updates
+Replace the plain `<span>` texts for Privacy/Impressum with `<a>` tags pointing to the correct URLs based on `locale`:
+- Privacy: `https://outzip.de/{locale}/help?header=3`
+- Impressum: `https://outzip.de/{locale}/help?header=4`
 
-**`src/index.css`** — Add custom CSS variables for the new brand colors:
-- Navy: `#0F2A38` (background hero)
-- Orange: `#F56A00` (already primary)
-- Lime: `#E2E71B` (accents, success state)
-- Cream: `#F4F2EC` (page background)
+Open in new tab (`target="_blank" rel="noopener"`).
 
-**`tailwind.config.ts`** — Add named colors: `navy`, `lime`, `cream` for easy use in Tailwind classes.
+**File**: `src/pages/JoinPage.tsx` (footer section, lines 285-291)
 
-### Page Structure (`src/pages/JoinPage.tsx`)
+### 2. Replace map pin strip with a visual map
 
-Complete redesign with these sections:
+Remove the decorative `MapPin` icons and the line below them (lines 144-160). Replace with an embedded map image/illustration of Germany with scattered pins. Options:
+- Use a static SVG map of Germany with stylized pin markers and one highlighted lime pin
+- This keeps the page lightweight (no external map library)
 
-1. **Top bar** — Outzip logo/text left, "Outdoor-Verleih Karte · 2025" right. Simple, minimal.
+The SVG will be an inline component showing Germany's outline with ~5 dots and one pulsing lime dot with the "Du könntest hier sein" label.
 
-2. **Hero section** — Full-width navy background. Large headline + subline. Below: a stylized SVG map strip with location pins, one pulsing lime pin with "Du könntest hier sein" label. CSS animation for the pulse.
+**File**: `src/pages/JoinPage.tsx` (hero section)
 
-3. **Trust pills row** — 4 horizontal pills: 🗺️ Kostenloser Eintrag · ✉️ Kein Newsletter · 🔒 Kein Vertrag · 🙋 Du entscheidest
+### 3. Logo placeholder
 
-4. **Registration form card** — White card on cream background. Simplified fields:
-   - Shopname (maps to `companyName`/`name`)
-   - Stadt (maps to `city`)
-   - Website (optional)
-   - E-Mail
-   - Checkbox grid (2 columns): ⛺ Zelte / 🌙 Schlafsäcke / 🎒 Rucksäcke / 🚴 Fahrräder · E-Bikes / 🏔️ Winter · Ski / 📦 Sonstiges
-   - Selected checkboxes get saved to `vendors.categories`
-   - CTA button: "Jetzt auf der Karte erscheinen →" in orange
+Replace the text "Outzip" in the header (line 130) with an `<img>` tag referencing a logo file. Since the user will provide the logo, add a placeholder path (`/outzip-logo.svg`) and ask the user to upload it.
 
-5. **Success state** — After submit, replace form with lime checkmark + "Danke, [Shopname]! Wir melden uns innerhalb von 24 Stunden."
+**File**: `src/pages/JoinPage.tsx` (header)
 
-6. **Footer** — Navy background, minimal: © 2025 Outzip · Datenschutz · Impressum
+### 4. Language switcher — avoid covering content
 
-### Form Logic Changes
-- Remove fields: `fullName`, `phone`, `address`, `country` from the form (simplify signup friction)
-- Keep `fullName` mapped from companyName or set a sensible default for `first_name`
-- Add `categories` state as `string[]` from checkbox selections
-- On submit: insert vendor with selected categories, then create auth + profile as before
-- Add `showSuccess` state to toggle between form and success message
+The switcher is `fixed top-4 right-4` which overlaps the header tag text. Fix by:
+- Moving it from `fixed` to being integrated into the JoinPage header bar (right side), OR
+- Adding `right-20` or similar offset so it doesn't overlap the top-bar tag text
 
-### Translation Updates
-**`src/i18n/en.json`** and **`src/i18n/de.json`** — Add/update keys for:
-- Hero headline/subline
-- Trust pill texts
-- Category checkbox labels (Zelte, Schlafsäcke, Rucksäcke, Fahrräder, Winter/Ski, Sonstiges)
-- Success message with `{shopname}` interpolation
-- Footer links
+Simplest: embed the language switcher directly in the JoinPage header instead of using the fixed-position global one. On the /join page, hide the global switcher and render EN/DE toggle inside the header bar to the right of the tag text.
+
+**File**: `src/components/LanguageSwitcher.tsx` — remove `fixed` positioning, make it inline
+**File**: `src/pages/JoinPage.tsx` — import and render `LanguageSwitcher` inside the header
 
 ### Files to modify
-- `src/index.css` — brand color variables
-- `tailwind.config.ts` — named colors
-- `src/pages/JoinPage.tsx` — full redesign
-- `src/i18n/en.json` — new translation keys
-- `src/i18n/de.json` — new translation keys
-
-### Mobile-first
-- Single column layout on small screens
-- Hero text stacked, map strip hidden or simplified on mobile
-- Form card full-width with proper padding
-- Under 2 scrolls on desktop
+- `src/pages/JoinPage.tsx` — footer links, SVG map, logo, inline language switcher
+- `src/components/LanguageSwitcher.tsx` — add prop to render inline (non-fixed) variant
 
