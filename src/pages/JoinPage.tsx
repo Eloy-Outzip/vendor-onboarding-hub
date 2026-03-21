@@ -177,24 +177,16 @@ const JoinPage = () => {
         </div>
       </section>
 
-      {/* Trust pills */}
-      <div className="bg-cream px-4 py-6">
-        <div className="mx-auto max-w-2xl flex flex-wrap items-center justify-center gap-3">
+      {/* Trust banner */}
+      <div className="bg-cream px-4 py-3">
+        <p className="text-center text-sm text-navy/60 whitespace-nowrap overflow-x-auto">
           {[
-            { emoji: "🗺️", key: "trustFree" },
-            { emoji: "✉️", key: "trustNoNewsletter" },
-            { emoji: "🔒", key: "trustNoContract" },
-            { emoji: "🙋", key: "trustYouDecide" },
-          ].map(({ emoji, key }) => (
-            <span
-              key={key}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground"
-            >
-              <span>{emoji}</span>
-              {t(`join.${key}`)}
-            </span>
-          ))}
-        </div>
+            t("join.trustFree"),
+            t("join.trustNoNewsletter"),
+            t("join.trustNoContract"),
+            t("join.trustYouDecide"),
+          ].join("  ·  ")}
+        </p>
       </div>
 
       {/* Form / Success */}
