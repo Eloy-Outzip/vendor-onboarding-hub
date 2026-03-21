@@ -42,9 +42,9 @@ const JoinPage = () => {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const toggleCategory = (cat: string) => {
+  const toggleCategory = (key: string) => {
     setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+      prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key]
     );
   };
 
