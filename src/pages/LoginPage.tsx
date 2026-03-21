@@ -51,7 +51,9 @@ const LoginPage = () => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
+      <AppHeader />
+      <div className="flex-1 flex items-center justify-center">
       <div className="mx-auto max-w-md w-full px-4">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
