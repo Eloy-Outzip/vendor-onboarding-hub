@@ -40,6 +40,7 @@ const App = () => (
             
             <Routes>
               <Route path="/" element={<RootRedirect />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/join" element={<JoinPage />} />
               <Route path="/welcome" element={<WelcomePage />} />
               <Route
