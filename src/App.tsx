@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import JoinPage from "./pages/JoinPage";
 import WelcomePage from "./pages/WelcomePage";
@@ -26,7 +26,7 @@ const RootRedirect = () => {
   if (loading) return null;
   if (hasProfile) return <Navigate to="/profile" replace />;
   if (user && !hasProfile) return <Navigate to="/join" replace />;
-  return <LoginPage />;
+  return <LandingPage />;
 };
 
 const App = () => (
