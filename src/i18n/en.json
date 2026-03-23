@@ -143,6 +143,12 @@
     "alreadyHaveAccount": "Already have an account?",
     "loginLink": "Log in →"
   },
+  "landing": {
+    "heroTitle": "Get visible to outdoor customers in your region",
+    "heroSubtitle": "We're mapping all outdoor rental shops in Germany. Free listing, no contract.",
+    "ctaJoin": "Join now →",
+    "ctaLogin": "Already registered? Log in"
+  },
   "notFound": {
     "title": "404",
     "message": "Oops! Page not found",

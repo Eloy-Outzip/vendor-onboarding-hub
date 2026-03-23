@@ -143,6 +143,12 @@
     "alreadyHaveAccount": "Bereits ein Konto?",
     "loginLink": "Anmelden →"
   },
+  "landing": {
+    "heroTitle": "Werde sichtbar für Outdoor-Kunden in deiner Region",
+    "heroSubtitle": "Wir kartieren alle Outdoor-Verleiher in Deutschland. Kostenlos, kein Vertrag.",
+    "ctaJoin": "Jetzt registrieren →",
+    "ctaLogin": "Bereits registriert? Einloggen"
+  },
   "notFound": {
     "title": "404",
     "message": "Seite nicht gefunden",
