@@ -12,9 +12,12 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { loading, hasProfile } = useAuth();
   const { t, locale } = useLanguage();
-  const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Prefill email from query param (e.g. redirected from /join for existing accounts)
+  const params = new URLSearchParams(window.location.search);
+  const [email, setEmail] = useState(params.get("email") || "");
 
   useEffect(() => {
     if (!loading && hasProfile) navigate("/profile", { replace: true });

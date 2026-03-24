@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, skipProfileCheck } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
@@ -59,60 +58,43 @@ const JoinPage = () => {
     }
 
     setSubmitting(true);
-    skipProfileCheck.current = true;
     try {
-      const { data: vendor, error: vendorError } = await supabase
-        .from("vendors")
-        .insert({
-          first_name: form.shopName,
-          name: form.shopName,
-          email: form.email,
-          website: form.website || null,
-          city: form.city || null,
+      const { data, error } = await supabase.functions.invoke("register-vendor", {
+        body: {
+          shopName: form.shopName.trim(),
+          city: form.city.trim(),
+          website: form.website.trim() || null,
+          email: form.email.trim().toLowerCase(),
           categories: selectedCategories.length > 0 ? selectedCategories : null,
-          status: "pending",
-        })
-        .select("id")
-        .single();
-
-      if (vendorError) throw vendorError;
-
-      const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/profile`,
-          data: { locale },
+          locale,
         },
       });
 
-      if (authError) {
-        toast.error(t("join.errorAccount"));
+      if (error) throw error;
+
+      const result = data as { status: string; message?: string };
+
+      if (result.status === "account_exists") {
+        toast.info(t("join.accountExists"));
+        navigate(`/login?email=${encodeURIComponent(form.email.trim())}`, { replace: true });
         return;
       }
 
-      const userId = authData.user?.id;
-      if (!userId) {
-        toast.error(t("join.errorAccount"));
+      if (result.status === "validation_error") {
+        toast.error(result.message || t("join.errorRequired"));
         return;
       }
 
-      const { error: profileError } = await supabase
-        .from("profiles" as any)
-        .insert({ id: userId, email: form.email, vendor_id: vendor.id } as any);
-
-      if (profileError) {
-        toast.error(t("join.errorAccount"));
+      if (result.status === "error") {
+        toast.error(result.message || t("join.errorGeneric"));
         return;
       }
 
+      // success or repaired
       setShowSuccess(true);
     } catch (err: any) {
       toast.error(err.message || t("join.errorGeneric"));
     } finally {
-      skipProfileCheck.current = false;
       setSubmitting(false);
     }
   };
@@ -144,9 +126,7 @@ const JoinPage = () => {
 
       {/* Map banner */}
       <div className="relative w-full overflow-hidden" style={{ height: '180px' }}>
-        {/* Navy to cream gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy/80 to-cream" />
-        {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.07]"
           style={{
@@ -154,19 +134,15 @@ const JoinPage = () => {
             backgroundSize: '40px 40px',
           }}
         />
-        {/* Pins */}
         <div className="relative h-full max-w-5xl mx-auto">
-          {/* Verleih Hamburg */}
           <div className="absolute left-[12%] top-[28%] flex flex-col items-center gap-1">
             <div className="w-3 h-3 rounded-full border-2 border-cream/40 bg-transparent" />
             <span className="text-[11px] text-cream/40 font-medium whitespace-nowrap hidden sm:block">Verleih Hamburg</span>
           </div>
-          {/* OutdoorBerlin */}
           <div className="absolute left-[38%] top-[20%] flex flex-col items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-[11px] font-semibold text-cream bg-primary px-2.5 py-0.5 rounded whitespace-nowrap hidden sm:block">OutdoorBerlin</span>
           </div>
-          {/* Highlighted pin — Du könntest hier sein */}
           <div className="absolute left-[46%] top-[48%] flex flex-col items-center gap-1">
             <div className="relative">
               <div className="absolute -inset-2 rounded-full bg-lime/20 animate-ping" />
@@ -176,12 +152,10 @@ const JoinPage = () => {
               {t("join.mapPinLabel")}
             </span>
           </div>
-          {/* Bergwelt München */}
           <div className="absolute right-[12%] top-[22%] flex flex-col items-center gap-1">
             <div className="w-3 h-3 rounded-full border-2 border-cream/30 bg-transparent" />
             <span className="text-[11px] text-cream/35 font-medium whitespace-nowrap hidden sm:block">Bergwelt München</span>
           </div>
-          {/* Alpine Gear */}
           <div className="absolute right-[6%] top-[50%] flex flex-col items-center gap-1">
             <div className="w-3 h-3 rounded-full border-2 border-cream/25 bg-transparent" />
             <span className="text-[11px] text-cream/30 font-medium whitespace-nowrap hidden sm:block">Alpine Gear</span>
@@ -306,6 +280,13 @@ const JoinPage = () => {
               >
                 {submitting ? t("common.submitting") : t("join.submit")}
               </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                {t("login.alreadyHaveAccount")}{" "}
+                <Link to="/login" className="text-primary font-medium hover:underline">
+                  {t("login.loginLink")}
+                </Link>
+              </p>
             </form>
           )}
         </div>
