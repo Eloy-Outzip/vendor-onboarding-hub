@@ -142,6 +142,9 @@ const ProfilePage = () => {
           <div className="space-y-2">
             <Label>{t("profile.website")}</Label>
             <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
+            {form.website && (
+              <a href={form.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">{form.website}</a>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t("profile.address")}</Label>
