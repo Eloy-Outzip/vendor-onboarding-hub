@@ -46,7 +46,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
     const load = async () => {
       const { data } = await supabase
         .from("vendors")
-        .select("id, name, city, categories, lat, lng, marketplace_url")
+        .select("id, name, city, categories, lat, lng, marketplace_url, website")
         .eq("status", "active")
         .not("lat", "is", null)
         .not("lng", "is", null);
