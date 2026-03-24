@@ -12,7 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Pencil, Save } from "lucide-react";
+
+const CATEGORY_KEYS = [
+  { key: "catTents", emoji: "⛺" },
+  { key: "catSleepingBags", emoji: "🌙" },
+  { key: "catBackpacks", emoji: "🎒" },
+  { key: "catBikes", emoji: "🚲" },
+  { key: "catWinter", emoji: "⛷️" },
+  { key: "catOther", emoji: "📦" },
+];
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
