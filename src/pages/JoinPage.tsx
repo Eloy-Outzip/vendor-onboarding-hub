@@ -61,6 +61,7 @@ const JoinPage = () => {
     }
 
     setSubmitting(true);
+    skipProfileCheck.current = true;
     try {
       const { data: vendor, error: vendorError } = await supabase
         .from("vendors")
@@ -80,8 +81,6 @@ const JoinPage = () => {
 
       const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
 
-      skipProfileCheck.current = true;
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password,
@@ -92,14 +91,12 @@ const JoinPage = () => {
       });
 
       if (authError) {
-        skipProfileCheck.current = false;
         toast.error(t("join.errorAccount"));
         return;
       }
 
       const userId = authData.user?.id;
       if (!userId) {
-        skipProfileCheck.current = false;
         toast.error(t("join.errorAccount"));
         return;
       }
@@ -107,8 +104,6 @@ const JoinPage = () => {
       const { error: profileError } = await supabase
         .from("profiles" as any)
         .insert({ id: userId, email: form.email, vendor_id: vendor.id } as any);
-
-      skipProfileCheck.current = false;
 
       if (profileError) {
         toast.error(t("join.errorAccount"));
@@ -119,6 +114,7 @@ const JoinPage = () => {
     } catch (err: any) {
       toast.error(err.message || t("join.errorGeneric"));
     } finally {
+      skipProfileCheck.current = false;
       setSubmitting(false);
     }
   };
