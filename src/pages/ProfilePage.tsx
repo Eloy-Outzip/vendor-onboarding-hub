@@ -197,8 +197,8 @@ const ProfilePage = () => {
             </Button>
           )}
         </section>
-        {/* Embed snippet for super admins */}
-        <EmbedSnippet userId={user?.id} />
+        {/* Admin section */}
+        <AdminSection userId={user?.id} />
       </div>
     </div>
   );
