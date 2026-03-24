@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const origin = req.headers.get("origin") || "https://outzip-signup.lovable.app";
 
     // Use service_role to manage auth users and bypass RLS
     const supabaseAdmin = createClient(
@@ -59,7 +60,6 @@ Deno.serve(async (req) => {
       }
 
       // Case C: auth user exists but profile missing — repair
-      // Find newest pending vendor for this email
       const { data: existingVendor } = await supabaseAdmin
         .from("vendors")
         .select("id")
@@ -72,7 +72,6 @@ Deno.serve(async (req) => {
       let vendorId: string;
 
       if (existingVendor) {
-        // Update the existing vendor with fresh data
         await supabaseAdmin
           .from("vendors")
           .update({
@@ -85,7 +84,6 @@ Deno.serve(async (req) => {
           .eq("id", existingVendor.id);
         vendorId = existingVendor.id;
       } else {
-        // Create vendor
         const { data: newVendor, error: vendorErr } = await supabaseAdmin
           .from("vendors")
           .insert({
@@ -115,14 +113,32 @@ Deno.serve(async (req) => {
           .insert({ id: existingUser.id, email: normalizedEmail, vendor_id: vendorId });
       }
 
+      // Re-send invite so the repaired user gets a login link
+      await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, {
+        data: { locale: locale || "de" },
+        redirectTo: `${origin}/login`,
+      });
+
       return new Response(
         JSON.stringify({ status: "success", repaired: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Case A: brand new email
-    // Create vendor first
+    // Case A: brand new email — use inviteUserByEmail which triggers auth-email-hook
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      normalizedEmail,
+      {
+        data: { locale: locale || "de" },
+        redirectTo: `${origin}/login`,
+      }
+    );
+
+    if (authError) throw authError;
+
+    const userId = authData.user.id;
+
+    // Create vendor
     const { data: vendor, error: vendorError } = await supabaseAdmin
       .from("vendors")
       .insert({
@@ -139,35 +155,12 @@ Deno.serve(async (req) => {
 
     if (vendorError) throw vendorError;
 
-    // Create auth user
-    const password = crypto.randomUUID().slice(0, 32) + "Aa1!";
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: normalizedEmail,
-      password,
-      email_confirm: false,
-      user_metadata: { locale: locale || "de" },
-    });
-
-    if (authError) throw authError;
-
-    const userId = authData.user.id;
-
     // Create profile
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({ id: userId, email: normalizedEmail, vendor_id: vendor.id });
 
     if (profileError) throw profileError;
-
-    // Send confirmation email by generating a signup link
-    // (admin-created users don't get auto-confirmation emails)
-    await supabaseAdmin.auth.admin.generateLink({
-      type: "signup",
-      email: normalizedEmail,
-      options: {
-        redirectTo: `${req.headers.get("origin") || "https://outzip-signup.lovable.app"}/profile`,
-      },
-    });
 
     return new Response(
       JSON.stringify({ status: "success" }),
