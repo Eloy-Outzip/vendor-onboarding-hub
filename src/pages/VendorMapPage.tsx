@@ -25,6 +25,7 @@ interface MapVendor {
   lat: number;
   lng: number;
   marketplace_url: string | null;
+  website: string | null;
 }
 
 const FlyTo = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
