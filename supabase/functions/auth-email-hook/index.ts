@@ -46,7 +46,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "gear-signup"
+const SITE_NAME = "Outzip Rental Platform"
 const SENDER_DOMAIN = "notify.outzip.de"
 const ROOT_DOMAIN = "outzip.de"
 const FROM_DOMAIN = "outzip.de" // Domain shown in From address (may be root or sender subdomain)
