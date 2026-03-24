@@ -167,6 +167,10 @@
     "viewProfile": "View Profile",
     "visitShop": "Visit Shop"
   },
+  "admin": {
+    "createVendor": "Create Vendor",
+    "vendorCreated": "Vendor created successfully"
+  },
   "notFound": {
     "title": "404",
     "message": "Oops! Page not found",

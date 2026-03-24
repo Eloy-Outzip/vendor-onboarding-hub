@@ -104,6 +104,7 @@ const VendorProfilePage = () => {
       logo_url: form.logo_url || null,
       lat: form.lat ?? null,
       lng: form.lng ?? null,
+      categories: form.categories || null,
     } as any).eq("id", id);
     if (error) toast.error(error.message);
     else {

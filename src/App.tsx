@@ -71,6 +71,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/create-vendor"
+                element={
+                  <ProtectedRoute>
+                    <AdminCreateVendorPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/vendors/:id" element={<VendorProfilePage />} />
               <Route path="/map" element={<VendorMapPage />} />
               <Route path="/map/embed" element={<VendorMapEmbedPage />} />
