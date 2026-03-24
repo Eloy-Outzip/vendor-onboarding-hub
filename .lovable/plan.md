@@ -1,61 +1,57 @@
 
 
-## Add Categories Display + Admin Vendor Creation
+## Add Logo Upload for Vendor Shops
 
-### 1. Fix Categories Display on Vendor Profile Page
+### What
+Replace the text-based `logo_url` input with a proper file upload using cloud storage. Logos are uploaded to a storage bucket and the resulting public URL is saved to `vendors.logo_url`.
 
-Currently, categories are stored as keys (e.g., `"catTents"`) but displayed raw. Need to translate them using the same `t()` function with `join.catTents` etc.
+### Storage Setup (Migration)
 
-**File: `src/pages/VendorProfilePage.tsx`**
-- In the categories section, replace `{c}` with `{t("join." + c)}` to show translated labels
-- Add category editing in edit mode: show the same checkbox list from JoinPage (reuse `CATEGORY_KEYS`) so categories can be toggled
-- Include `categories` in the `handleSave` update payload
-- Show categories section even when empty in edit mode (so they can be added)
+1. Create a public `vendor-logos` storage bucket
+2. Add RLS policies:
+   - **SELECT**: Anyone can read (public logos)
+   - **INSERT**: Authenticated users can upload
+   - **UPDATE/DELETE**: Authenticated users can manage their own uploads
 
-### 2. Add "Create Vendor" Page for Super Admins
-
-**Create: `src/pages/AdminCreateVendorPage.tsx`**
-- Protected page accessible only to super admins
-- Form with all vendor fields: first_name, name, email, phone, website, address, city, country, categories (checkboxes), marketplace_url, logo_url, lat, lng, status (dropdown: pending/active), description
-- On submit: insert into `vendors` table
-- After creation, navigate to `/vendors/:newId`
-
-**File: `src/App.tsx`**
-- Add route `/admin/create-vendor` wrapped in `ProtectedRoute`
-
-**File: `src/pages/ProfilePage.tsx`**
-- Add a "Create Vendor" button in the super admin section (next to the embed snippet)
-
-### 3. Database: Update RLS for Super Admin Updates
-
-Currently the vendors UPDATE policy only allows owners. Super admins need to update any vendor.
-
-**Migration**: Add a new UPDATE policy for super admins:
 ```sql
-CREATE POLICY "Super admins can update any vendor"
-ON public.vendors FOR UPDATE TO authenticated
-USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.is_super_admin = true))
-WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.is_super_admin = true));
+INSERT INTO storage.buckets (id, name, public) VALUES ('vendor-logos', 'vendor-logos', true);
+
+CREATE POLICY "Anyone can view vendor logos" ON storage.objects FOR SELECT USING (bucket_id = 'vendor-logos');
+CREATE POLICY "Authenticated users can upload logos" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'vendor-logos');
+CREATE POLICY "Authenticated users can update logos" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'vendor-logos');
+CREATE POLICY "Authenticated users can delete logos" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'vendor-logos');
 ```
 
-### 4. Translation Keys
+### Logo Upload Component
 
-Add to `en.json` and `de.json`:
-```
-"admin": {
-  "createVendor": "Create Vendor",
-  "vendorCreated": "Vendor created successfully"
-}
-```
+**Create: `src/components/LogoUpload.tsx`**
+
+A reusable component that:
+- Shows current logo preview (or placeholder)
+- File input accepting `image/png, image/jpeg, image/webp` only
+- Max file size: 2MB (client-side validation)
+- On upload: uploads to `vendor-logos/{vendorId}.{ext}` via Supabase Storage SDK
+- Returns the public URL to parent via `onUpload(url)` callback
+- Shows loading spinner during upload
+- Displays size/format error messages via toast
+
+### Integration Points
+
+**`src/pages/AdminCreateVendorPage.tsx`**
+- Replace the `logo_url` text input (line 168-171) with `<LogoUpload>` component
+- After upload completes, set `form.logo_url` to the returned public URL
+
+**`src/pages/VendorProfilePage.tsx`**
+- In edit mode, replace the `logo_url` text input (line 239-240) with `<LogoUpload>`
+- Pass current `form.logo_url` as initial preview
+- On upload, update `form.logo_url`
 
 ### Files Summary
 
 | Action | File |
 |--------|------|
-| Edit | `src/pages/VendorProfilePage.tsx` — translate category keys, add category editing |
-| Create | `src/pages/AdminCreateVendorPage.tsx` — full vendor creation form |
-| Edit | `src/App.tsx` — add admin route |
-| Edit | `src/pages/ProfilePage.tsx` — add "Create Vendor" button for admins |
-| Migration | Super admin UPDATE policy on vendors |
-| Edit | `src/i18n/en.json`, `src/i18n/de.json` — admin keys |
+| Migration | Create `vendor-logos` bucket + RLS policies |
+| Create | `src/components/LogoUpload.tsx` |
+| Edit | `src/pages/AdminCreateVendorPage.tsx` — swap text input for upload |
+| Edit | `src/pages/VendorProfilePage.tsx` — swap text input for upload in edit mode |
 
