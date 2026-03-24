@@ -12,7 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Pencil, Save } from "lucide-react";
+
+const CATEGORY_KEYS = [
+  { key: "catTents", emoji: "⛺" },
+  { key: "catSleepingBags", emoji: "🌙" },
+  { key: "catBackpacks", emoji: "🎒" },
+  { key: "catBikes", emoji: "🚲" },
+  { key: "catWinter", emoji: "⛷️" },
+  { key: "catOther", emoji: "📦" },
+];
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -94,6 +104,7 @@ const VendorProfilePage = () => {
       logo_url: form.logo_url || null,
       lat: form.lat ?? null,
       lng: form.lng ?? null,
+      categories: form.categories || null,
     } as any).eq("id", id);
     if (error) toast.error(error.message);
     else {
@@ -148,16 +159,39 @@ const VendorProfilePage = () => {
         </section>
 
         {/* Categories */}
-        {vendor.categories && vendor.categories.length > 0 && (
+        {editing ? (
+          <section className="space-y-2">
+            <Label className="text-sm font-semibold">{t("vendorProfile.categories")}</Label>
+            <div className="grid grid-cols-2 gap-3">
+              {CATEGORY_KEYS.map(({ key, emoji }) => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer rounded-lg border px-3 py-2 hover:bg-accent/50 transition-colors">
+                  <Checkbox
+                    checked={(form.categories || []).includes(key)}
+                    onCheckedChange={() => {
+                      const cats = form.categories || [];
+                      setForm({
+                        ...form,
+                        categories: cats.includes(key) ? cats.filter((c) => c !== key) : [...cats, key],
+                      });
+                    }}
+                  />
+                  <span>{emoji} {t(`join.${key}`)}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+        ) : vendor.categories && vendor.categories.length > 0 ? (
           <section className="space-y-2">
             <Label className="text-sm font-semibold">{t("vendorProfile.categories")}</Label>
             <div className="flex flex-wrap gap-2">
               {vendor.categories.map((c) => (
-                <span key={c} className="rounded-full border px-3 py-0.5 text-xs font-medium text-foreground">{c}</span>
+                <span key={c} className="rounded-full border px-3 py-0.5 text-xs font-medium text-foreground">
+                  {t(`join.${c}`)}
+                </span>
               ))}
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* Contact */}
         <section className="rounded-lg border p-4 space-y-2">

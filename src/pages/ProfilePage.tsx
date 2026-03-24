@@ -197,14 +197,14 @@ const ProfilePage = () => {
             </Button>
           )}
         </section>
-        {/* Embed snippet for super admins */}
-        <EmbedSnippet userId={user?.id} />
+        {/* Admin section */}
+        <AdminSection userId={user?.id} />
       </div>
     </div>
   );
 };
 
-const EmbedSnippet = ({ userId }: { userId?: string }) => {
+const AdminSection = ({ userId }: { userId?: string }) => {
   const { t } = useLanguage();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -220,13 +220,21 @@ const EmbedSnippet = ({ userId }: { userId?: string }) => {
   const snippet = `<iframe src="https://outzip-signup.lovable.app/map/embed" width="100%" height="500" frameborder="0"></iframe>`;
 
   return (
-    <section className="rounded-lg border p-6 space-y-3">
-      <h2 className="text-lg font-semibold text-foreground">Embed Map</h2>
-      <pre className="bg-muted rounded p-3 text-xs overflow-x-auto">{snippet}</pre>
-      <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(snippet); toast.success("Copied!"); }}>
-        Copy snippet
-      </Button>
-    </section>
+    <>
+      <section className="rounded-lg border p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">{t("admin.createVendor")}</h2>
+        <Button variant="outline" asChild>
+          <Link to="/admin/create-vendor">{t("admin.createVendor")} →</Link>
+        </Button>
+      </section>
+      <section className="rounded-lg border p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Embed Map</h2>
+        <pre className="bg-muted rounded p-3 text-xs overflow-x-auto">{snippet}</pre>
+        <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(snippet); toast.success("Copied!"); }}>
+          Copy snippet
+        </Button>
+      </section>
+    </>
   );
 };
 

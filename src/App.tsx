@@ -15,6 +15,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ServicesPage from "./pages/ServicesPage";
 import ProductsUploadPage from "./pages/ProductsUploadPage";
 import VendorProfilePage from "./pages/VendorProfilePage";
+import AdminCreateVendorPage from "./pages/AdminCreateVendorPage";
 import VendorMapPage from "./pages/VendorMapPage";
 import VendorMapEmbedPage from "./pages/VendorMapEmbedPage";
 import NotFound from "./pages/NotFound";
@@ -67,6 +68,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ProductsUploadPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/create-vendor"
+                element={
+                  <ProtectedRoute>
+                    <AdminCreateVendorPage />
                   </ProtectedRoute>
                 }
               />

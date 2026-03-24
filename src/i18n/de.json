@@ -167,6 +167,10 @@
     "viewProfile": "Profil ansehen",
     "visitShop": "Shop besuchen"
   },
+  "admin": {
+    "createVendor": "Anbieter erstellen",
+    "vendorCreated": "Anbieter erfolgreich erstellt"
+  },
   "notFound": {
     "title": "404",
     "message": "Seite nicht gefunden",
