@@ -14,6 +14,7 @@ import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Pencil, Save } from "lucide-react";
+import LogoUpload from "@/components/LogoUpload";
 
 const CATEGORY_KEYS = [
   { key: "catTents", emoji: "⛺" },
@@ -237,7 +238,7 @@ const VendorProfilePage = () => {
               </div>
               <div className="space-y-1">
                 <Label>{t("vendorProfile.logoUrl")}</Label>
-                <Input value={form.logo_url || ""} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." />
+                <LogoUpload currentUrl={form.logo_url} vendorId={id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
               </div>
               <div className="space-y-1">
                 <Label>Lat</Label>

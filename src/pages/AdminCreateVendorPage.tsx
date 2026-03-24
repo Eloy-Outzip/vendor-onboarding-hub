@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import LogoUpload from "@/components/LogoUpload";
 
 const CATEGORY_KEYS = [
   { key: "catTents", emoji: "⛺" },
@@ -167,7 +168,7 @@ const AdminCreateVendorPage = () => {
 
         <div className="space-y-2">
           <Label>{t("vendorProfile.logoUrl")}</Label>
-          <Input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." />
+          <LogoUpload currentUrl={form.logo_url} onUpload={(url) => setForm({ ...form, logo_url: url })} />
         </div>
 
         <div className="space-y-2">
