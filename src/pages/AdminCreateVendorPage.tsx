@@ -167,7 +167,7 @@ const AdminCreateVendorPage = () => {
 
         <div className="space-y-2">
           <Label>{t("vendorProfile.logoUrl")}</Label>
-          <Input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." />
+          <LogoUpload currentUrl={form.logo_url} onUpload={(url) => setForm({ ...form, logo_url: url })} />
         </div>
 
         <div className="space-y-2">
