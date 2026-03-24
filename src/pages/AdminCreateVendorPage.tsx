@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import LogoUpload from "@/components/LogoUpload";
 
 const CATEGORY_KEYS = [
   { key: "catTents", emoji: "⛺" },
