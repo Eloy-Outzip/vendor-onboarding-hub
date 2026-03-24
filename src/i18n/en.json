@@ -37,6 +37,7 @@
     "errorRequired": "Please fill in all required fields.",
     "errorEmail": "Please enter a valid email.",
     "errorAccount": "Account creation failed. Please contact support or try again with a different email.",
+    "accountExists": "An account with this email already exists. Redirecting to login…",
     "errorGeneric": "Something went wrong. Please try again.",
     "title": "Put your shop on the map",
     "subtitle": "Customers are looking for gear near them. Be found.",

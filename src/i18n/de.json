@@ -37,6 +37,7 @@
     "errorRequired": "Bitte fülle alle Pflichtfelder aus.",
     "errorEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
     "errorAccount": "Kontoerstellung fehlgeschlagen. Bitte kontaktiere den Support oder versuche es mit einer anderen E-Mail.",
+    "accountExists": "Ein Konto mit dieser E-Mail existiert bereits. Du wirst zum Login weitergeleitet…",
     "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
     "title": "Bringe deinen Shop auf die Karte",
     "subtitle": "Kunden suchen nach Ausrüstung in ihrer Nähe. Werde gefunden.",
