@@ -14,6 +14,7 @@ import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Pencil, Save } from "lucide-react";
+import LogoUpload from "@/components/LogoUpload";
 
 const CATEGORY_KEYS = [
   { key: "catTents", emoji: "⛺" },
