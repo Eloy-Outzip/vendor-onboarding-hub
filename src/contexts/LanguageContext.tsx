@@ -12,34 +12,51 @@ interface LanguageContextType {
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
 function resolve(obj: Record<string, any>, path: string): string {
-  return path.split(".").reduce((o, k) => o?.[k], obj) as unknown as string ?? path;
+  return (path.split(".").reduce((o, k) => o?.[k], obj) as string | undefined) ?? path;
 }
 
+function getInitialLocale(): Locale {
+  if (typeof window === "undefined") return "en";
+  const stored = window.localStorage.getItem("locale") as Locale | null;
+  if (stored === "en" || stored === "de") return stored;
+  return window.navigator.language.startsWith("de") ? "de" : "en";
+}
+
+function translate(locale: Locale, key: string, vars?: Record<string, string | number>) {
+  let str = resolve(translations[locale], key);
+  if (vars) {
+    Object.entries(vars).forEach(([k, v]) => {
+      str = str.replace(`{${k}}`, String(v));
+    });
+  }
+  return str;
+}
+
+const fallbackContext: LanguageContextType = {
+  locale: getInitialLocale(),
+  setLocale: (l) => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("locale", l);
+    }
+  },
+  t: (key, vars) => translate(getInitialLocale(), key, vars),
+};
+
+const LanguageContext = createContext<LanguageContextType>(fallbackContext);
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    const stored = localStorage.getItem("locale") as Locale | null;
-    if (stored === "en" || stored === "de") return stored;
-    return navigator.language.startsWith("de") ? "de" : "en";
-  });
+  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    localStorage.setItem("locale", l);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("locale", l);
+    }
   }, []);
 
   const t = useCallback(
-    (key: string, vars?: Record<string, string | number>) => {
-      let str = resolve(translations[locale], key);
-      if (vars) {
-        Object.entries(vars).forEach(([k, v]) => {
-          str = str.replace(`{${k}}`, String(v));
-        });
-      }
-      return str;
-    },
+    (key: string, vars?: Record<string, string | number>) => translate(locale, key, vars),
     [locale]
   );
 
@@ -51,7 +68,5 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export function useLanguage() {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
-  return ctx;
+  return useContext(LanguageContext);
 }
