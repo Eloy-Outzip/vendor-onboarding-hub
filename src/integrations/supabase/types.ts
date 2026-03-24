@@ -185,18 +185,21 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          is_super_admin: boolean
           vendor_id: string | null
         }
         Insert: {
           created_at?: string | null
           email?: string | null
           id: string
+          is_super_admin?: boolean
           vendor_id?: string | null
         }
         Update: {
           created_at?: string | null
           email?: string | null
           id?: string
+          is_super_admin?: boolean
           vendor_id?: string | null
         }
         Relationships: [
@@ -244,6 +247,10 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          marketplace_url: string | null
           name: string
           phone: string | null
           rents_equipment: boolean | null
@@ -260,6 +267,10 @@ export type Database = {
           email: string
           first_name: string
           id?: string
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          marketplace_url?: string | null
           name: string
           phone?: string | null
           rents_equipment?: boolean | null
@@ -276,6 +287,10 @@ export type Database = {
           email?: string
           first_name?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          marketplace_url?: string | null
           name?: string
           phone?: string | null
           rents_equipment?: boolean | null

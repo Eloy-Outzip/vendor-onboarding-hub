@@ -1,0 +1,242 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import AppHeader from "@/components/AppHeader";
+import { toast } from "sonner";
+import { ExternalLink, Pencil, Save } from "lucide-react";
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+interface Vendor {
+  id: string;
+  name: string;
+  first_name: string;
+  description: string | null;
+  email: string;
+  phone: string | null;
+  website: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  categories: string[] | null;
+  lat: number | null;
+  lng: number | null;
+  marketplace_url: string | null;
+  logo_url: string | null;
+  status: string;
+}
+
+const VendorProfilePage = () => {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const [form, setForm] = useState<Partial<Vendor>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      const { data } = await supabase
+        .from("vendors")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (data) {
+        const v = data as unknown as Vendor;
+        setVendor(v);
+        setForm(v);
+      }
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("vendor_id, is_super_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile) {
+          const p = profile as any;
+          setCanEdit(p.vendor_id === id || p.is_super_admin === true);
+        }
+      }
+      setLoading(false);
+    };
+    load();
+  }, [id, user]);
+
+  const handleSave = async () => {
+    if (!id) return;
+    setSaving(true);
+    const { error } = await supabase.from("vendors").update({
+      name: form.name,
+      description: form.description || null,
+      address: form.address || null,
+      city: form.city || null,
+      country: form.country || null,
+      marketplace_url: form.marketplace_url || null,
+      logo_url: form.logo_url || null,
+      lat: form.lat ?? null,
+      lng: form.lng ?? null,
+    } as any).eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(t("common.save"));
+      setVendor({ ...vendor!, ...form } as Vendor);
+      setEditing(false);
+    }
+    setSaving(false);
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("common.loading")}</div>;
+  if (!vendor) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Vendor not found</div>;
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      <AppHeader />
+      <div className="mx-auto max-w-2xl px-4 py-12 space-y-8">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            {vendor.logo_url ? (
+              <img src={vendor.logo_url} alt={vendor.name} className="w-16 h-16 rounded-lg object-cover" />
+            ) : (
+              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+                {vendor.name.charAt(0)}
+              </div>
+            )}
+            <div>
+              {editing ? (
+                <Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} className="text-xl font-bold" />
+              ) : (
+                <h1 className="text-2xl font-bold text-foreground">{vendor.name}</h1>
+              )}
+              {vendor.city && <p className="text-muted-foreground">{vendor.city}{vendor.country ? `, ${vendor.country}` : ""}</p>}
+            </div>
+          </div>
+          {canEdit && !editing && (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> {t("vendorProfile.edit")}
+            </Button>
+          )}
+        </div>
+
+        {/* Description */}
+        <section className="space-y-2">
+          <Label className="text-sm font-semibold">{t("vendorProfile.description")}</Label>
+          {editing ? (
+            <Textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+          ) : (
+            <p className="text-sm text-muted-foreground">{vendor.description || "—"}</p>
+          )}
+        </section>
+
+        {/* Categories */}
+        {vendor.categories && vendor.categories.length > 0 && (
+          <section className="space-y-2">
+            <Label className="text-sm font-semibold">{t("vendorProfile.categories")}</Label>
+            <div className="flex flex-wrap gap-2">
+              {vendor.categories.map((c) => (
+                <span key={c} className="rounded-full border px-3 py-0.5 text-xs font-medium text-foreground">{c}</span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Contact */}
+        <section className="rounded-lg border p-4 space-y-2">
+          <Label className="text-sm font-semibold">{t("vendorProfile.contact")}</Label>
+          <div className="text-sm space-y-1 text-muted-foreground">
+            <p>{vendor.email}</p>
+            {vendor.phone && <p>{vendor.phone}</p>}
+            {vendor.website && (
+              <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{vendor.website}</a>
+            )}
+          </div>
+        </section>
+
+        {/* Marketplace link */}
+        {editing ? (
+          <section className="space-y-2">
+            <Label className="text-sm font-semibold">{t("vendorProfile.marketplaceUrl")}</Label>
+            <Input value={form.marketplace_url || ""} onChange={(e) => setForm({ ...form, marketplace_url: e.target.value })} placeholder="https://..." />
+          </section>
+        ) : vendor.marketplace_url ? (
+          <Button asChild variant="outline" className="w-full">
+            <a href={vendor.marketplace_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" /> {t("vendorProfile.visitShop")}
+            </a>
+          </Button>
+        ) : null}
+
+        {/* Edit fields */}
+        {editing && (
+          <section className="space-y-4 rounded-lg border p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>{t("vendorProfile.address")}</Label>
+                <Input value={form.address || ""} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>{t("vendorProfile.city")}</Label>
+                <Input value={form.city || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>{t("vendorProfile.country")}</Label>
+                <Input value={form.country || ""} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>{t("vendorProfile.logoUrl")}</Label>
+                <Input value={form.logo_url || ""} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="space-y-1">
+                <Label>Lat</Label>
+                <Input type="number" value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value ? parseFloat(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Lng</Label>
+                <Input type="number" value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value ? parseFloat(e.target.value) : null })} />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={saving}>
+                <Save className="h-4 w-4 mr-1" /> {saving ? t("common.saving") : t("common.save")}
+              </Button>
+              <Button variant="outline" onClick={() => { setEditing(false); setForm(vendor); }}>
+                {t("vendorProfile.cancel")}
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {/* Mini map */}
+        {vendor.lat && vendor.lng && (
+          <section className="rounded-lg overflow-hidden border" style={{ height: 200 }}>
+            <MapContainer center={[vendor.lat, vendor.lng]} zoom={13} className="w-full h-full" scrollWheelZoom={false}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <Marker position={[vendor.lat, vendor.lng]} />
+            </MapContainer>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default VendorProfilePage;

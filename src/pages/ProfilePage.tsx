@@ -197,8 +197,36 @@ const ProfilePage = () => {
             </Button>
           )}
         </section>
+        {/* Embed snippet for super admins */}
+        <EmbedSnippet userId={user?.id} />
       </div>
     </div>
+  );
+};
+
+const EmbedSnippet = ({ userId }: { userId?: string }) => {
+  const { t } = useLanguage();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("profiles").select("is_super_admin").eq("id", userId).maybeSingle().then(({ data }) => {
+      if ((data as any)?.is_super_admin) setIsAdmin(true);
+    });
+  }, [userId]);
+
+  if (!isAdmin) return null;
+
+  const snippet = `<iframe src="https://outzip-signup.lovable.app/map/embed" width="100%" height="500" frameborder="0"></iframe>`;
+
+  return (
+    <section className="rounded-lg border p-6 space-y-3">
+      <h2 className="text-lg font-semibold text-foreground">Embed Map</h2>
+      <pre className="bg-muted rounded p-3 text-xs overflow-x-auto">{snippet}</pre>
+      <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(snippet); toast.success("Copied!"); }}>
+        Copy snippet
+      </Button>
+    </section>
   );
 };
 

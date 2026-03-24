@@ -14,6 +14,9 @@ import WelcomePage from "./pages/WelcomePage";
 import ProfilePage from "./pages/ProfilePage";
 import ServicesPage from "./pages/ServicesPage";
 import ProductsUploadPage from "./pages/ProductsUploadPage";
+import VendorProfilePage from "./pages/VendorProfilePage";
+import VendorMapPage from "./pages/VendorMapPage";
+import VendorMapEmbedPage from "./pages/VendorMapEmbedPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +70,9 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/vendors/:id" element={<VendorProfilePage />} />
+              <Route path="/map" element={<VendorMapPage />} />
+              <Route path="/map/embed" element={<VendorMapEmbedPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
