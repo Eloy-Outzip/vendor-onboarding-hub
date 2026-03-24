@@ -13,12 +13,10 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 
 const CATEGORY_KEYS = [
-  { key: "catTents", emoji: "⛺" },
-  { key: "catSleepingBags", emoji: "🌙" },
-  { key: "catBackpacks", emoji: "🎒" },
-  { key: "catBikes", emoji: "🚴" },
-  { key: "catWinter", emoji: "🏔️" },
-  { key: "catOther", emoji: "📦" },
+  { key: "catClimbing", emoji: "🧗" },
+  { key: "catSnowTouring", emoji: "❄️" },
+  { key: "catBikeBags", emoji: "🎒" },
+  { key: "catRoofTents", emoji: "⛺" },
 ] as const;
 
 const JoinPage = () => {

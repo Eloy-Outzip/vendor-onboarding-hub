@@ -17,12 +17,10 @@ import { ExternalLink, Pencil, Save } from "lucide-react";
 import LogoUpload from "@/components/LogoUpload";
 
 const CATEGORY_KEYS = [
-  { key: "catTents", emoji: "⛺" },
-  { key: "catSleepingBags", emoji: "🌙" },
-  { key: "catBackpacks", emoji: "🎒" },
-  { key: "catBikes", emoji: "🚲" },
-  { key: "catWinter", emoji: "⛷️" },
-  { key: "catOther", emoji: "📦" },
+  { key: "catClimbing", emoji: "🧗" },
+  { key: "catSnowTouring", emoji: "❄️" },
+  { key: "catBikeBags", emoji: "🎒" },
+  { key: "catRoofTents", emoji: "⛺" },
 ];
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;

@@ -98,6 +98,9 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
                   ))}
                 </div>
               )}
+              {v.website && (
+                <a href={v.website} target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-medium hover:underline block">{v.website}</a>
+              )}
               <div className="flex gap-2 pt-1">
                 <a href={`/vendors/${v.id}`} className="text-primary text-xs font-medium hover:underline">
                   {t("vendorMap.viewProfile")}
