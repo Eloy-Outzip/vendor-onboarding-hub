@@ -213,10 +213,6 @@ const JoinPage = () => {
             ))}
           </div>
           <p className="text-center text-sm text-navy/50 mt-8">{t("steps.note")}</p>
-          <div className="mt-4 mx-auto max-w-lg flex items-start gap-2.5 rounded-lg border border-lime/40 bg-lime/10 px-4 py-3">
-            <Lightbulb className="h-4 w-4 text-navy/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-navy/70">{t("steps.tip")}</p>
-          </div>
         </div>
       </div>
 
