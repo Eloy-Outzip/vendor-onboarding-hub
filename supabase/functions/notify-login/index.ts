@@ -6,7 +6,7 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const SITE_NAME = 'gear-signup'
+const SITE_NAME = 'Outzip Rental Platform'
 const SENDER_DOMAIN = 'notify.outzip.de'
 const FROM_DOMAIN = 'outzip.de'
 const NOTIFY_EMAIL = 'eloy@outzip.de'
