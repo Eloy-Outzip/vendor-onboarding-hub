@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,7 +32,7 @@ async function checkProfile(userId: string, retries = 1): Promise<boolean | null
       await new Promise((r) => setTimeout(r, 1500));
       return checkProfile(userId, retries - 1);
     }
-    return null; // null = unknown after retry
+    return null;
   }
   return !!(data as any)?.vendor_id;
 }
@@ -42,40 +42,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
+  const checkingRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
 
+    // Safety timeout: force loading=false after 10s
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        setLoading(false);
+      }
+    }, 10000);
+
     const init = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (!mounted) return;
+      checkingRef.current = true;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!mounted) return;
 
-      if (error || !session?.user) {
-        setSession(null);
-        setUser(null);
-        setHasProfile(false);
+        if (error || !session?.user) {
+          setSession(null);
+          setUser(null);
+          setHasProfile(false);
+          setLoading(false);
+          return;
+        }
+
+        let profileLinked: boolean | null = null;
+        try {
+          profileLinked = await checkProfile(session.user.id);
+        } catch {
+          profileLinked = null;
+        }
+        if (!mounted) return;
+
+        if (profileLinked === false && !skipProfileCheck.current) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setHasProfile(false);
+          setLoading(false);
+          return;
+        }
+
+        setSession(session);
+        setUser(session.user);
+        setHasProfile(profileLinked !== false);
         setLoading(false);
-        return;
+      } catch {
+        if (mounted) {
+          setLoading(false);
+        }
+      } finally {
+        checkingRef.current = false;
       }
-
-      const profileLinked = await checkProfile(session.user.id);
-      if (!mounted) return;
-
-      if (profileLinked === false && !skipProfileCheck.current) {
-        // Confirmed orphan — sign out
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
-        setHasProfile(false);
-        setLoading(false);
-        return;
-      }
-
-      // null (error) → benefit of doubt, treat as valid
-      setSession(session);
-      setUser(session.user);
-      setHasProfile(profileLinked !== false);
-      setLoading(false);
     };
 
     init();
@@ -92,21 +112,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // If JoinPage flagged that signup is in progress, accept session as-is
         if (skipProfileCheck.current) {
           setSession(session);
           setUser(session.user);
-          setHasProfile(false); // profile not yet created
+          setHasProfile(false);
           setLoading(false);
           return;
         }
 
-        // Set loading=true while we verify the profile to prevent premature redirects
+        // Skip if init() is already running a profile check
+        if (checkingRef.current) return;
+
         setLoading(true);
 
-        const profileLinked = await checkProfile(session.user.id);
+        let profileLinked: boolean | null = null;
+        try {
+          profileLinked = await checkProfile(session.user.id);
+        } catch {
+          profileLinked = null;
+        }
 
-        // Send login notification email (fire-and-forget, only on actual sign-in)
         if ((profileLinked === true || profileLinked === null) && event === "SIGNED_IN") {
           supabase.functions.invoke("notify-login").catch(() => {});
         }
@@ -130,6 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
