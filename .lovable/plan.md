@@ -1,57 +1,63 @@
 
 
-## Add Logo Upload for Vendor Shops
+## Plan: Fix Registration, Update Copy, Update Categories, Add Website Link
 
-### What
-Replace the text-based `logo_url` input with a proper file upload using cloud storage. Logos are uploaded to a storage bucket and the resulting public URL is saved to `vendors.logo_url`.
+### 1. Fix Registration Bug
 
-### Storage Setup (Migration)
+The registration flow on `/join` has a potential issue: when email auto-confirm is disabled, `supabase.auth.signUp` may return `session: null` and `user` with no active session. This means the profile INSERT runs with the anon key — which works due to RLS `WITH CHECK: true`, but the `onAuthStateChange` listener may fire with a `SIGNED_IN` event before the profile is created, causing race conditions.
 
-1. Create a public `vendor-logos` storage bucket
-2. Add RLS policies:
-   - **SELECT**: Anyone can read (public logos)
-   - **INSERT**: Authenticated users can upload
-   - **UPDATE/DELETE**: Authenticated users can manage their own uploads
+**Fix in `src/pages/JoinPage.tsx`:**
+- Add better error handling: log the actual error from each step (vendor insert, signup, profile insert) to toast so the user sees what failed
+- Handle the case where `authData.user` exists but `authData.session` is null (email confirmation required) — this is actually the expected flow, so the success screen should still show
+- Ensure `skipProfileCheck` is properly managed in all error paths (currently some paths don't reset it in `finally`)
+- Move `skipProfileCheck.current = false` into the `finally` block to prevent it staying stuck
 
-```sql
-INSERT INTO storage.buckets (id, name, public) VALUES ('vendor-logos', 'vendor-logos', true);
+### 2. Update Landing Page Subtitle
 
-CREATE POLICY "Anyone can view vendor logos" ON storage.objects FOR SELECT USING (bucket_id = 'vendor-logos');
-CREATE POLICY "Authenticated users can upload logos" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'vendor-logos');
-CREATE POLICY "Authenticated users can update logos" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'vendor-logos');
-CREATE POLICY "Authenticated users can delete logos" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'vendor-logos');
-```
+**File: `src/i18n/de.json`**
+- Change `landing.heroSubtitle` to: `"Wir kartieren alle Outdoor-Verleiher in Deutschland. Kostenlos & ohne Vertrag."`
 
-### Logo Upload Component
+**File: `src/i18n/en.json`**
+- Change `landing.heroSubtitle` to: `"We're mapping all outdoor rental shops in Germany. Free & no contract."`
 
-**Create: `src/components/LogoUpload.tsx`**
+### 3. Update Categories
 
-A reusable component that:
-- Shows current logo preview (or placeholder)
-- File input accepting `image/png, image/jpeg, image/webp` only
-- Max file size: 2MB (client-side validation)
-- On upload: uploads to `vendor-logos/{vendorId}.{ext}` via Supabase Storage SDK
-- Returns the public URL to parent via `onUpload(url)` callback
-- Shows loading spinner during upload
-- Displays size/format error messages via toast
+Replace the current 6 categories with the 4 new ones across all files that define `CATEGORY_KEYS`:
 
-### Integration Points
+New categories:
+- `catClimbing` → "Kletterausrüstung" / "Climbing gear" 🧗
+- `catSnowTouring` → "Schnee-Touren Ausrüstung" / "Snow touring gear" ❄️
+- `catBikeBags` → "Fahrradtaschen" / "Bike bags" 🎒
+- `catRoofTents` → "Dachzelte" / "Roof tents" ⛺
 
-**`src/pages/AdminCreateVendorPage.tsx`**
-- Replace the `logo_url` text input (line 168-171) with `<LogoUpload>` component
-- After upload completes, set `form.logo_url` to the returned public URL
+**Files to update:**
+- `src/pages/JoinPage.tsx` — CATEGORY_KEYS array
+- `src/pages/VendorProfilePage.tsx` — CATEGORY_KEYS array
+- `src/pages/AdminCreateVendorPage.tsx` — CATEGORY_KEYS array (if it has one)
+- `src/i18n/de.json` — replace `join.catTents`, `catSleepingBags`, etc. with new keys
+- `src/i18n/en.json` — same
 
-**`src/pages/VendorProfilePage.tsx`**
-- In edit mode, replace the `logo_url` text input (line 239-240) with `<LogoUpload>`
-- Pass current `form.logo_url` as initial preview
-- On upload, update `form.logo_url`
+### 4. Add Website Link to Profile Page and Map Pin
+
+**File: `src/pages/ProfilePage.tsx`**
+- The website field already exists in the form. Add a clickable link display (like on VendorProfilePage) so the vendor can see/click their website URL.
+
+**File: `src/pages/VendorMapPage.tsx`**
+- Add `website` to the vendor query SELECT
+- Show website link in the map pin popup (between category tags and the View Profile/Visit Shop links)
+
+**File: `src/pages/VendorProfilePage.tsx`**
+- Website link is already shown in the contact section — no change needed.
 
 ### Files Summary
 
 | Action | File |
 |--------|------|
-| Migration | Create `vendor-logos` bucket + RLS policies |
-| Create | `src/components/LogoUpload.tsx` |
-| Edit | `src/pages/AdminCreateVendorPage.tsx` — swap text input for upload |
-| Edit | `src/pages/VendorProfilePage.tsx` — swap text input for upload in edit mode |
+| Edit | `src/pages/JoinPage.tsx` — fix registration error handling, update categories |
+| Edit | `src/pages/VendorProfilePage.tsx` — update categories |
+| Edit | `src/pages/AdminCreateVendorPage.tsx` — update categories |
+| Edit | `src/pages/VendorMapPage.tsx` — add website to query + popup |
+| Edit | `src/pages/ProfilePage.tsx` — add clickable website link |
+| Edit | `src/i18n/de.json` — subtitle, new category keys |
+| Edit | `src/i18n/en.json` — subtitle, new category keys |
 
