@@ -149,6 +149,24 @@
     "ctaJoin": "Jetzt registrieren →",
     "ctaLogin": "Bereits registriert? Einloggen"
   },
+  "vendorProfile": {
+    "edit": "Bearbeiten",
+    "description": "Beschreibung",
+    "categories": "Kategorien",
+    "contact": "Kontakt",
+    "visitShop": "Shop besuchen",
+    "marketplaceUrl": "Marktplatz-URL",
+    "address": "Adresse",
+    "city": "Stadt",
+    "country": "Land",
+    "logoUrl": "Logo-URL",
+    "cancel": "Abbrechen"
+  },
+  "vendorMap": {
+    "searchPlaceholder": "Stadt suchen...",
+    "viewProfile": "Profil ansehen",
+    "visitShop": "Shop besuchen"
+  },
   "notFound": {
     "title": "404",
     "message": "Seite nicht gefunden",
