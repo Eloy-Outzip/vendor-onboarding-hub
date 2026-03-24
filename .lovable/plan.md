@@ -1,63 +1,114 @@
 
+## Registration bug: root cause and fix plan
 
-## Plan: Fix Registration, Update Copy, Update Categories, Add Website Link
+### What’s actually broken
+I do know what the issue is.
 
-### 1. Fix Registration Bug
+The failure is not the form UI itself — it’s the onboarding sequence on `/join`:
 
-The registration flow on `/join` has a potential issue: when email auto-confirm is disabled, `supabase.auth.signUp` may return `session: null` and `user` with no active session. This means the profile INSERT runs with the anon key — which works due to RLS `WITH CHECK: true`, but the `onAuthStateChange` listener may fire with a `SIGNED_IN` event before the profile is created, causing race conditions.
+- Auth logs show `user_repeated_signup` for `orders@outzip.de`
+- The database already contains several `vendors` rows for that email
+- There is no matching `profiles` row for that auth user
 
-**Fix in `src/pages/JoinPage.tsx`:**
-- Add better error handling: log the actual error from each step (vendor insert, signup, profile insert) to toast so the user sees what failed
-- Handle the case where `authData.user` exists but `authData.session` is null (email confirmation required) — this is actually the expected flow, so the success screen should still show
-- Ensure `skipProfileCheck` is properly managed in all error paths (currently some paths don't reset it in `finally`)
-- Move `skipProfileCheck.current = false` into the `finally` block to prevent it staying stuck
+That means the current flow is creating the vendor first, then calling `auth.signUp()`, and when the email already exists the auth system returns a duplicate-signup response instead of a normal new user. The code then tries to create a profile anyway, fails, and shows the generic “Kontoerstellung fehlgeschlagen” toast. Each retry creates another orphan `vendors` row.
 
-### 2. Update Landing Page Subtitle
+### Implementation plan
 
-**File: `src/i18n/de.json`**
-- Change `landing.heroSubtitle` to: `"Wir kartieren alle Outdoor-Verleiher in Deutschland. Kostenlos & ohne Vertrag."`
+### 1. Move `/join` registration logic out of the page and into a backend function
+Create a backend registration function (for example `register-vendor`) and have `JoinPage` call that instead of directly chaining:
+- insert vendor
+- sign up auth user
+- insert profile
 
-**File: `src/i18n/en.json`**
-- Change `landing.heroSubtitle` to: `"We're mapping all outdoor rental shops in Germany. Free & no contract."`
+Why:
+- the client cannot safely detect duplicate signups
+- the backend can check auth users and repair broken onboarding states cleanly
 
-### 3. Update Categories
+### 2. Make registration idempotent by email
+In the backend function:
 
-Replace the current 6 categories with the 4 new ones across all files that define `CATEGORY_KEYS`:
+- Normalize the email
+- Check whether an auth user already exists for that email
+- Check whether a profile already exists for that auth user
+- Check whether a pending vendor row already exists for that email
 
-New categories:
-- `catClimbing` → "Kletterausrüstung" / "Climbing gear" 🧗
-- `catSnowTouring` → "Schnee-Touren Ausrüstung" / "Snow touring gear" ❄️
-- `catBikeBags` → "Fahrradtaschen" / "Bike bags" 🎒
-- `catRoofTents` → "Dachzelte" / "Roof tents" ⛺
+Then handle these cases explicitly:
 
-**Files to update:**
-- `src/pages/JoinPage.tsx` — CATEGORY_KEYS array
-- `src/pages/VendorProfilePage.tsx` — CATEGORY_KEYS array
-- `src/pages/AdminCreateVendorPage.tsx` — CATEGORY_KEYS array (if it has one)
-- `src/i18n/de.json` — replace `join.catTents`, `catSleepingBags`, etc. with new keys
-- `src/i18n/en.json` — same
+#### Case A — brand new email
+- create auth user
+- create vendor
+- create profile linked to vendor
+- return success
 
-### 4. Add Website Link to Profile Page and Map Pin
+#### Case B — auth user exists and profile already exists
+- do not create another vendor
+- return a typed response like `account_exists`
+- frontend shows a clear message: “This email already has an account. Please use the login link.”
 
-**File: `src/pages/ProfilePage.tsx`**
-- The website field already exists in the form. Add a clickable link display (like on VendorProfilePage) so the vendor can see/click their website URL.
+#### Case C — auth user exists but profile is missing
+This is the broken state the user is hitting now.
 
-**File: `src/pages/VendorMapPage.tsx`**
-- Add `website` to the vendor query SELECT
-- Show website link in the map pin popup (between category tags and the View Profile/Visit Shop links)
+- reuse the existing auth user
+- reuse the newest pending vendor for that email, or create/update exactly one vendor row
+- create the missing profile
+- return success instead of failing
 
-**File: `src/pages/VendorProfilePage.tsx`**
-- Website link is already shown in the contact section — no change needed.
+This repairs previously broken registrations.
 
-### Files Summary
+### 3. Stop creating duplicate vendor rows
+Update the flow so vendor creation only happens after the auth state is understood.
 
-| Action | File |
-|--------|------|
-| Edit | `src/pages/JoinPage.tsx` — fix registration error handling, update categories |
-| Edit | `src/pages/VendorProfilePage.tsx` — update categories |
-| Edit | `src/pages/AdminCreateVendorPage.tsx` — update categories |
-| Edit | `src/pages/VendorMapPage.tsx` — add website to query + popup |
-| Edit | `src/pages/ProfilePage.tsx` — add clickable website link |
-| Edit | `src/i18n/de.json` — subtitle, new category keys |
-| Edit | `src/i18n/en.json` — subtitle, new category keys |
+If a vendor row already exists for the same email in a pending/unlinked state:
+- update/reuse it instead of inserting a new one
 
+This prevents the repeated orphan rows already visible in the database.
+
+### 4. Improve the `/join` error handling
+Update `src/pages/JoinPage.tsx` to handle typed backend responses instead of always showing the generic account error.
+
+Planned UX:
+- `success` → show current success card
+- `account_exists` → show helpful message + link user to `/login`
+- `validation_error` → show specific field-level or toast error
+- unexpected failure → fallback generic error
+
+Also keep `skipProfileCheck` only for the actual success path and avoid relying on it for duplicate-email handling.
+
+### 5. Add a small login recovery path
+If the backend returns `account_exists`, optionally navigate to:
+```text
+/login?email=orders@outzip.de
+```
+and prefill the login field there.
+
+That gives existing vendors a clean next step instead of a dead end.
+
+### 6. Clean up current broken data
+There are already multiple pending vendor rows for the same email. After the code fix:
+- keep one canonical pending vendor row per affected email
+- remove or ignore the extras
+
+This is a one-time cleanup step so the repaired account points to a single vendor record.
+
+## Files likely involved
+- `src/pages/JoinPage.tsx`
+- `src/pages/LoginPage.tsx` (optional email prefill)
+- `src/contexts/AuthContext.tsx` (only if minor recovery handling is needed)
+- `supabase/functions/register-vendor/index.ts` (new)
+- `src/i18n/de.json`
+- `src/i18n/en.json`
+
+## Result after the fix
+A vendor will be able to submit `/join` successfully even if:
+- the email is brand new
+- the email already has a completed account
+- the email got stuck earlier in a half-created auth/no-profile state
+
+Most importantly, retrying registration will no longer create duplicate vendor rows and no longer end in the current generic failure toast.
+
+## QA to run after implementation
+1. Register with a brand new email → success
+2. Register again with the same fully linked email → clear “use login” message
+3. Register with a previously broken email (existing auth user, no profile) → profile gets repaired and succeeds
+4. Confirm no extra vendor rows are created on repeated attempts
+5. Test `/login` afterwards to confirm the recovered vendor can access `/profile`
