@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Lightbulb } from "lucide-react";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, skipProfileCheck } from "@/contexts/AuthContext";
@@ -213,10 +213,6 @@ const JoinPage = () => {
             ))}
           </div>
           <p className="text-center text-sm text-navy/50 mt-8">{t("steps.note")}</p>
-          <div className="mt-4 mx-auto max-w-lg flex items-start gap-2.5 rounded-lg border border-lime/40 bg-lime/10 px-4 py-3">
-            <Lightbulb className="h-4 w-4 text-navy/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-navy/70">{t("steps.tip")}</p>
-          </div>
         </div>
       </div>
 
