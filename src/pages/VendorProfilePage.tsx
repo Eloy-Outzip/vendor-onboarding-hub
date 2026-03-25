@@ -279,13 +279,21 @@ const VendorProfilePage = () => {
                 <Label>{t("vendorProfile.logoUrl")}</Label>
                 <LogoUpload currentUrl={form.logo_url} vendorId={vendor?.id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
               </div>
-              <div className="space-y-1">
-                <Label>Lat</Label>
-                <Input type="number" value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value ? parseFloat(e.target.value) : null })} />
-              </div>
-              <div className="space-y-1">
-                <Label>Lng</Label>
-                <Input type="number" value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value ? parseFloat(e.target.value) : null })} />
+              <div className="space-y-1 sm:col-span-2">
+                <Label>{t("vendorProfile.coordinates")}</Label>
+                <Input
+                  placeholder="52.45935, 13.40671"
+                  value={form.lat != null && form.lng != null ? `${form.lat}, ${form.lng}` : ""}
+                  onChange={(e) => {
+                    const parts = e.target.value.split(",").map((s) => s.trim());
+                    if (parts.length === 2 && parts[0] && parts[1]) {
+                      setForm({ ...form, lat: parseFloat(parts[0]) || null, lng: parseFloat(parts[1]) || null });
+                    } else if (!e.target.value.trim()) {
+                      setForm({ ...form, lat: null, lng: null });
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">{t("vendorProfile.coordinatesHint")}</p>
               </div>
             </div>
             <div className="flex gap-2">

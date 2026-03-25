@@ -170,7 +170,9 @@
     "country": "Country",
     "logoUrl": "Logo URL",
     "cancel": "Cancel",
-    "postalCode": "Postal code"
+    "postalCode": "Postal code",
+    "coordinates": "Coordinates",
+    "coordinatesHint": "Copy from Google Maps, e.g. 52.45935, 13.40671"
   },
   "vendorMap": {
     "searchPlaceholder": "Search city...",
