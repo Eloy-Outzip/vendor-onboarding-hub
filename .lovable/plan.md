@@ -1,61 +1,41 @@
 
 
-## Plan: SEO-Friendly Vendor URLs + Meta Tags
+## Fix: Vendor Not Showing on Map + Remove Logo Feature
 
-### 1. Add `slug` column to vendors table
+### 1. Map Pin Not Showing — Root Cause
 
-**Migration:** Add a unique `slug` text column to `vendors`. Populate existing rows with a slugified version of their name (lowercase, hyphens, no special chars). Add a unique index.
+The map query at `VendorMapPage.tsx` line 59 filters `.eq("status", "active")`. Your vendor likely has `status = 'pending'` (the default). The vendor was never activated. Two options:
 
-```sql
-ALTER TABLE public.vendors ADD COLUMN slug text;
-UPDATE public.vendors SET slug = lower(regexp_replace(regexp_replace(name, '[^a-zA-Z0-9\s-]', '', 'g'), '\s+', '-', 'g')) WHERE slug IS NULL;
-CREATE UNIQUE INDEX vendors_slug_unique ON public.vendors (slug);
-```
+**Option A (recommended):** Update your vendor's status to `active` in the database.
 
-### 2. Update routing to use slug
+**Option B:** Also show `pending` vendors on the map (less likely what you want).
 
-**`src/App.tsx`:** Add a new route `/vendors/:slug` (keep `/vendors/:id` as fallback for UUID-based URLs that redirect to slug URL).
+**Fix:** Run a data update to set the Outzip vendor status to `active`. Also, consider adding a way for vendors to self-activate or for admins to activate vendors.
 
-### 3. Update VendorProfilePage to resolve by slug
+### 2. Remove Logo Capability Everywhere
+
+Delete `src/components/LogoUpload.tsx` and remove all logo references from:
 
 **`src/pages/VendorProfilePage.tsx`:**
-- Detect whether the param is a UUID or a slug
-- If UUID: query by `id`, then redirect to `/vendors/{slug}`
-- If slug: query by `slug`
-- Add `<Helmet>` (react-helmet-async) for SEO meta tags: title, description, og:title, og:description with vendor name, categories, and city
+- Remove `import LogoUpload`
+- Remove `logo_url` from Vendor interface, form state, `handleSave` update, and the logo display/upload UI sections
+- Remove the logo image / initial letter avatar from the header — replace with just the vendor name
 
-### 4. Update all internal links to use slug
+**`src/pages/AdminCreateVendorPage.tsx`:**
+- Remove `import LogoUpload`
+- Remove `logo_url` from form state, insert payload, and the LogoUpload form field
 
-**Files:**
-- `src/pages/ProfilePage.tsx` — link to `/vendors/${vendorSlug}`
-- `src/pages/AdminCreateVendorPage.tsx` — navigate to slug after creation
-- `src/pages/VendorMapPage.tsx` — vendor links in sidebar and popups
-
-### 5. Auto-generate slug on registration
-
-**`supabase/functions/register-vendor/index.ts`:** Generate slug from vendor name during creation. Handle collisions by appending a number suffix (e.g. `outzip-2`).
-
-### 6. Add SEO meta tags with react-helmet-async
-
-Install `react-helmet-async`. On VendorProfilePage, render:
-```html
-<title>{vendor.name} — Outzip</title>
-<meta name="description" content="{vendor.description || categories joined}" />
-<meta property="og:title" content="{vendor.name}" />
-<meta property="og:description" content="Categories: ..." />
-```
+**`src/i18n/en.json` + `de.json`:**
+- Remove `vendorProfile.logoUrl` translation key
 
 ### Files Summary
 
 | Action | File |
 |--------|------|
-| Migration | Add `slug` column + unique index + backfill |
-| Install | `react-helmet-async` |
-| Edit | `src/App.tsx` — add slug route |
-| Edit | `src/pages/VendorProfilePage.tsx` — resolve by slug, add meta tags |
-| Edit | `src/pages/ProfilePage.tsx` — use slug in link |
-| Edit | `src/pages/VendorMapPage.tsx` — use slug in links |
-| Edit | `src/pages/AdminCreateVendorPage.tsx` — navigate to slug |
-| Edit | `supabase/functions/register-vendor/index.ts` — generate slug |
-| Edit | `src/main.tsx` — add HelmetProvider wrapper |
+| Data update | Set vendor status to `active` for Outzip |
+| Delete | `src/components/LogoUpload.tsx` |
+| Edit | `src/pages/VendorProfilePage.tsx` — remove all logo references |
+| Edit | `src/pages/AdminCreateVendorPage.tsx` — remove all logo references |
+| Edit | `src/i18n/en.json` — remove logoUrl key |
+| Edit | `src/i18n/de.json` — remove logoUrl key |
 
