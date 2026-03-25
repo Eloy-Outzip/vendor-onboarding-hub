@@ -100,8 +100,8 @@ const AdminDashboardPage = () => {
     }
   };
 
-  if (isAdmin === false) return <Navigate to="/profile" replace />;
-  if (isAdmin === null || loading) {
+  if (!isAdmin) return <Navigate to="/profile" replace />;
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         {t("common.loading")}
