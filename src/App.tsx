@@ -27,10 +27,11 @@ const queryClient = new QueryClient();
 import { isEditorPreview } from "@/lib/isEditorPreview";
 
 const RootRedirect = () => {
-  const { loading, hasProfile, user } = useAuth();
+  const { loading, hasProfile, isAdmin, user } = useAuth();
   if (isEditorPreview()) return <Navigate to="/profile" replace />;
   if (loading) return null;
   if (hasProfile) return <Navigate to="/profile" replace />;
+  if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
   if (user && !hasProfile) return <Navigate to="/join" replace />;
   return <LandingPage />;
 };

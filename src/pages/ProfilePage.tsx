@@ -223,22 +223,15 @@ const ProfilePage = () => {
         )}
 
         {/* Admin section */}
-        <AdminSection userId={user?.id} />
+        <AdminSection />
       </div>
     </div>
   );
 };
 
-const AdminSection = ({ userId }: { userId?: string }) => {
+const AdminSection = () => {
   const { t } = useLanguage();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (!userId) return;
-    supabase.from("profiles").select("is_super_admin").eq("id", userId).maybeSingle().then(({ data }) => {
-      if ((data as any)?.is_super_admin) setIsAdmin(true);
-    });
-  }, [userId]);
+  const { isAdmin } = useAuth();
 
   if (!isAdmin) return null;
 

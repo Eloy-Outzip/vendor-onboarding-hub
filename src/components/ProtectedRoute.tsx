@@ -5,7 +5,7 @@ import { Navigate } from "react-router-dom";
 import { isEditorPreview } from "@/lib/isEditorPreview";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { loading, hasProfile, user } = useAuth();
+  const { loading, hasProfile, isAdmin, user } = useAuth();
   const { t } = useLanguage();
 
   if (isEditorPreview()) return <>{children}</>;
@@ -19,7 +19,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) return <Navigate to="/" replace />;
-  if (!hasProfile) return <Navigate to="/join" replace />;
+  if (!hasProfile && !isAdmin) return <Navigate to="/join" replace />;
 
   return <>{children}</>;
 };

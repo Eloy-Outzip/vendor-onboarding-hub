@@ -42,30 +42,12 @@ const statusVariant = (status: string) => {
 };
 
 const AdminDashboardPage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin: isAdminFromCtx } = useAuth();
   const { t } = useLanguage();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const isAdmin = isEditorPreview() ? true : isAdminFromCtx;
+  const [vendors, setVendors] = useState<Vendor[]>(isEditorPreview() ? MOCK_VENDORS : []);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (isEditorPreview()) {
-      setIsAdmin(true);
-      setVendors(MOCK_VENDORS);
-      setLoading(false);
-      return;
-    }
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("is_super_admin")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setIsAdmin((data as any)?.is_super_admin === true);
-      });
-  }, [user]);
+  const [loading, setLoading] = useState(!isEditorPreview());
 
   useEffect(() => {
     if (!isAdmin) return;
