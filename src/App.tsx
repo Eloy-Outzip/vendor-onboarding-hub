@@ -19,6 +19,7 @@ import AdminCreateVendorPage from "./pages/AdminCreateVendorPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import VendorMapPage from "./pages/VendorMapPage";
 import VendorMapEmbedPage from "./pages/VendorMapEmbedPage";
+import UnsubscribePage from "./pages/UnsubscribePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,7 @@ const App = () => (
               <Route path="/vendors/:id" element={<VendorProfilePage />} />
               <Route path="/map" element={<VendorMapPage />} />
               <Route path="/map/embed" element={<VendorMapEmbedPage />} />
+              <Route path="/unsubscribe" element={<UnsubscribePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { ExternalLink, MapPin, Search } from "lucide-react";
+import { ExternalLink, MapPin, Pencil, Search } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
 
 interface Vendor {
@@ -97,6 +97,24 @@ const AdminDashboardPage = () => {
         prev.map((v) => (v.id === vendorId ? { ...v, status: newStatus } : v))
       );
       toast.success(`Status → ${newStatus}`);
+
+      // Send activation email when vendor is set to active
+      if (newStatus === "active") {
+        const vendor = vendors.find((v) => v.id === vendorId);
+        if (vendor) {
+          supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "vendor-activation",
+              recipientEmail: vendor.email,
+              idempotencyKey: `vendor-activation-${vendorId}-${Date.now()}`,
+              templateData: {
+                vendorName: vendor.name,
+                profileUrl: `${window.location.origin}/vendors/${vendor.slug || vendorId}`,
+              },
+            },
+          }).catch((err) => console.error("Activation email error:", err));
+        }
+      }
     }
   };
 
@@ -185,6 +203,11 @@ const AdminDashboardPage = () => {
                         {t("admin.deactivate")}
                       </Button>
                     )}
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link to={`/vendors/${v.slug || v.id}?edit=true`}>
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                    </Button>
                     <Button size="sm" variant="ghost" asChild>
                       <Link to={`/vendors/${v.slug || v.id}`}>
                         <ExternalLink className="h-4 w-4" />
