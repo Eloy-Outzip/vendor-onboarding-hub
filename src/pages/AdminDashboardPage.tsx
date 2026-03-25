@@ -12,6 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ExternalLink, MapPin, Search } from "lucide-react";
+import { isEditorPreview } from "@/lib/isEditorPreview";
 
 interface Vendor {
   id: string;
@@ -26,6 +27,11 @@ interface Vendor {
   slug: string | null;
   created_at: string;
 }
+
+const MOCK_VENDORS: Vendor[] = [
+  { id: "1", first_name: "Preview", name: "Alpine Rentals", email: "info@alpine.de", city: "Munich", status: "active", categories: ["catClimbing"], lat: 48.13, lng: 11.58, slug: "alpine-rentals", created_at: new Date().toISOString() },
+  { id: "2", first_name: "Test", name: "Mountain Gear", email: "test@mountain.de", city: "Berlin", status: "pending", categories: ["catTents"], lat: null, lng: null, slug: "mountain-gear", created_at: new Date().toISOString() },
+];
 
 const statusVariant = (status: string) => {
   switch (status) {
@@ -44,6 +50,12 @@ const AdminDashboardPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isEditorPreview()) {
+      setIsAdmin(true);
+      setVendors(MOCK_VENDORS);
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     supabase
       .from("profiles")
