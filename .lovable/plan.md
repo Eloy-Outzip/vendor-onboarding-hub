@@ -1,44 +1,39 @@
 
 
-## Plan: Vendor Admin Dashboard
+## Plan: Super Admin for Kai, Edit Button on Dashboard, Activation Email
 
-### Overview
+### 1. Grant super admin to kai@outzip.de
 
-Create a new `/admin/dashboard` page accessible to super admins, showing all vendors in a table with status indicators, quick actions (activate/deactivate), and direct links to editable profiles.
+Run a SQL update to set `is_super_admin = true` on the profiles row where `email = 'kai@outzip.de'`.
 
-### 1. New page: `src/pages/AdminDashboardPage.tsx`
+### 2. Add Edit button to Admin Dashboard
 
-A table-based dashboard that:
-- Fetches all vendors from the database (ordered by `created_at` desc)
-- Displays columns: Name, City, Email, Status, Categories, Coordinates, Created, Actions
-- Status shown as colored badges: `pending` (yellow), `products_submitted` (blue), `active` (green)
-- **Activate button**: One-click to set `status = 'active'` (only shown for non-active vendors)
-- **Deactivate button**: Set back to `pending`
-- **Profile link**: Direct link to `/vendors/{slug}` where super admin can edit inline
-- Search/filter input to quickly find vendors by name or city
+In `AdminDashboardPage.tsx`, add a `Pencil` icon button next to the existing `ExternalLink` button in each vendor row. This button links to `/vendors/{slug || id}` — the same vendor profile page but signals edit intent. Since the profile page already supports inline editing for super admins (via the `canEdit` check), linking directly there is sufficient. We can add an `?edit=true` query param so the profile page auto-opens in edit mode.
 
-### 2. Add route in `src/App.tsx`
+**Files:** `src/pages/AdminDashboardPage.tsx` (add Pencil button), `src/pages/VendorProfilePage.tsx` (read `?edit=true` query param to auto-enter edit mode)
 
-```
-/admin/dashboard → ProtectedRoute → AdminDashboardPage
-```
+### 3. Send automated email when vendor is activated
 
-### 3. Add link in `AdminSection` of `ProfilePage.tsx`
+This requires transactional email infrastructure. The project already has auth email infrastructure (auth-email-hook, process-email-queue) but does NOT have transactional email scaffolding (no `send-transactional-email` function, no `transactional-email-templates` folder).
 
-Add a "Vendor Dashboard" button alongside the existing "Create Vendor" link in the admin section.
+**Steps:**
+1. Check email domain status
+2. Set up email infrastructure (if needed) and scaffold transactional email support
+3. Create an "activation" email template in `_shared/transactional-email-templates/`
+4. Deploy the edge functions
+5. Update `updateStatus` in `AdminDashboardPage.tsx` to invoke `send-transactional-email` when setting status to `active`
 
-### 4. Add i18n keys
-
-Add translation keys to `en.json` and `de.json`:
-- `admin.dashboard`, `admin.vendorDashboard`, `admin.activate`, `admin.deactivate`, `admin.statusPending`, `admin.statusActive`, `admin.statusProductsSubmitted`, `admin.searchVendors`
+**Template content:** A branded email telling the vendor their profile is now live on the Outzip map, with a link to their profile.
 
 ### Files Summary
 
 | Action | File |
 |--------|------|
-| Create | `src/pages/AdminDashboardPage.tsx` |
-| Edit | `src/App.tsx` — add route |
-| Edit | `src/pages/ProfilePage.tsx` — add dashboard link in AdminSection |
-| Edit | `src/i18n/en.json` — add admin dashboard keys |
-| Edit | `src/i18n/de.json` — add admin dashboard keys |
+| Data update | Set `is_super_admin = true` for kai@outzip.de |
+| Edit | `src/pages/AdminDashboardPage.tsx` — add edit (Pencil) button, send activation email on status change |
+| Edit | `src/pages/VendorProfilePage.tsx` — auto-enter edit mode from `?edit=true` |
+| Create | Transactional email template for vendor activation |
+| Deploy | Edge functions (send-transactional-email, handle-email-unsubscribe, handle-email-suppression) |
+| Create | Unsubscribe page |
+| Edit | `src/i18n/en.json` + `de.json` — add edit/activation keys |
 
