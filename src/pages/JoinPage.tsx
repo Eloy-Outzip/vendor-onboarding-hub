@@ -16,6 +16,12 @@ const CATEGORY_KEYS = [
   { key: "catSnowTouring", emoji: "❄️" },
   { key: "catBikeBags", emoji: "🎒" },
   { key: "catRoofTents", emoji: "⛺" },
+  { key: "catTents", emoji: "🏕️" },
+  { key: "catBackpacks", emoji: "🎒" },
+  { key: "catSleepingBags", emoji: "🛏️" },
+  { key: "catBikesEbikes", emoji: "🚲" },
+  { key: "catSki", emoji: "⛷️" },
+  { key: "catOther", emoji: "📦" },
 ] as const;
 
 const JoinPage = () => {
