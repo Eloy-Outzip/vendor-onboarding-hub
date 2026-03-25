@@ -32,6 +32,7 @@ interface MapVendor {
   lng: number;
   marketplace_url: string | null;
   website: string | null;
+  slug: string | null;
 }
 
 const FlyTo = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
@@ -54,7 +55,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
     const load = async () => {
       const { data } = await supabase
         .from("vendors")
-        .select("id, name, city, categories, lat, lng, marketplace_url, website")
+        .select("id, name, city, categories, lat, lng, marketplace_url, website, slug")
         .eq("status", "active")
         .not("lat", "is", null)
         .not("lng", "is", null);
@@ -139,7 +140,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
                 <a href={formatUrl(v.website)} target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-medium hover:underline block">{v.website}</a>
               )}
               <div className="flex gap-2 pt-1">
-                <a href={`/vendors/${v.id}`} className="text-primary text-xs font-medium hover:underline">
+                <a href={`/vendors/${v.slug || v.id}`} className="text-primary text-xs font-medium hover:underline">
                   {t("vendorMap.viewProfile")}
                 </a>
                 {v.marketplace_url && (

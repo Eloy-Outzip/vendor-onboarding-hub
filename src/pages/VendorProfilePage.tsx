@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -59,10 +60,14 @@ interface Vendor {
   marketplace_url: string | null;
   logo_url: string | null;
   status: string;
+  slug: string | null;
 }
 
+const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 const VendorProfilePage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: param } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -74,14 +79,22 @@ const VendorProfilePage = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (!id) return;
-      const { data } = await supabase
-        .from("vendors")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
+      if (!param) return;
+      let data: any;
+      if (isUUID(param)) {
+        const res = await supabase.from("vendors").select("*").eq("id", param).maybeSingle();
+        data = res.data;
+      } else {
+        const res = await (supabase.from("vendors").select("*") as any).eq("slug", param).maybeSingle();
+        data = res.data;
+      }
       if (data) {
         const v = data as unknown as Vendor;
+        // If accessed by UUID and slug exists, redirect to slug URL
+        if (isUUID(param) && v.slug) {
+          navigate(`/vendors/${v.slug}`, { replace: true });
+          return;
+        }
         setVendor(v);
         setForm(v);
       }
@@ -94,16 +107,17 @@ const VendorProfilePage = () => {
           .maybeSingle();
         if (profile) {
           const p = profile as any;
-          setCanEdit(p.vendor_id === id || p.is_super_admin === true);
+          const vendorId = data ? (data as any).id : param;
+          setCanEdit(p.vendor_id === vendorId || p.is_super_admin === true);
         }
       }
       setLoading(false);
     };
     load();
-  }, [id, user]);
+  }, [param, user]);
 
   const handleSave = async () => {
-    if (!id) return;
+    if (!vendor?.id) return;
     setSaving(true);
     const { error } = await supabase.from("vendors").update({
       name: form.name,
@@ -116,7 +130,7 @@ const VendorProfilePage = () => {
       lat: form.lat ?? null,
       lng: form.lng ?? null,
       categories: form.categories || null,
-    } as any).eq("id", id);
+    } as any).eq("id", vendor.id);
     if (error) toast.error(error.message);
     else {
       toast.success(t("common.save"));
@@ -129,8 +143,19 @@ const VendorProfilePage = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("common.loading")}</div>;
   if (!vendor) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Vendor not found</div>;
 
+  const seoDescription = vendor.description || [
+    ...(vendor.categories || []).map((c) => t(`join.${c}`)),
+    vendor.city,
+  ].filter(Boolean).join(", ");
+
   return (
     <div className="min-h-screen bg-muted/30">
+      <Helmet>
+        <title>{vendor.name} — Outzip</title>
+        <meta name="description" content={seoDescription} />
+        <meta property="og:title" content={vendor.name} />
+        <meta property="og:description" content={seoDescription} />
+      </Helmet>
       <AppHeader />
       <div className="mx-auto max-w-2xl px-4 py-12 space-y-8">
         {/* Header */}
@@ -252,7 +277,7 @@ const VendorProfilePage = () => {
               </div>
               <div className="space-y-1">
                 <Label>{t("vendorProfile.logoUrl")}</Label>
-                <LogoUpload currentUrl={form.logo_url} vendorId={id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
+                <LogoUpload currentUrl={form.logo_url} vendorId={vendor?.id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
               </div>
               <div className="space-y-1">
                 <Label>Lat</Label>

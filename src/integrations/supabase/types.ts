@@ -255,6 +255,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           rents_equipment: boolean | null
+          slug: string | null
           status: string
           website: string | null
         }
@@ -276,6 +277,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           rents_equipment?: boolean | null
+          slug?: string | null
           status?: string
           website?: string | null
         }
@@ -297,6 +299,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           rents_equipment?: boolean | null
+          slug?: string | null
           status?: string
           website?: string | null
         }
