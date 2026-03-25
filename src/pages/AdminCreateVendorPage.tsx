@@ -165,15 +165,21 @@ const AdminCreateVendorPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Lat</Label>
-            <Input type="number" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label>Lng</Label>
-            <Input type="number" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} />
-          </div>
+        <div className="space-y-2">
+          <Label>{t("vendorProfile.coordinates")}</Label>
+          <Input
+            placeholder="52.45935, 13.40671"
+            value={form.lat && form.lng ? `${form.lat}, ${form.lng}` : ""}
+            onChange={(e) => {
+              const parts = e.target.value.split(",").map((s) => s.trim());
+              if (parts.length === 2 && parts[0] && parts[1]) {
+                setForm({ ...form, lat: parts[0], lng: parts[1] });
+              } else if (!e.target.value.trim()) {
+                setForm({ ...form, lat: "", lng: "" });
+              }
+            }}
+          />
+          <p className="text-xs text-muted-foreground">{t("vendorProfile.coordinatesHint")}</p>
         </div>
 
         <div className="space-y-2">
