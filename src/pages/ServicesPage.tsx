@@ -1,14 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
 import AppHeader from "@/components/AppHeader";
+
+const CATEGORY_KEYS = [
+  { key: "catClimbing", emoji: "🧗" },
+  { key: "catSnowTouring", emoji: "❄️" },
+  { key: "catBikeBags", emoji: "🎒" },
+  { key: "catRoofTents", emoji: "⛺" },
+  { key: "catTents", emoji: "🏕️" },
+  { key: "catBackpacks", emoji: "🎒" },
+  { key: "catSleepingBags", emoji: "🛏️" },
+  { key: "catBikesEbikes", emoji: "🚲" },
+  { key: "catSki", emoji: "⛷️" },
+  { key: "catOther", emoji: "📦" },
+];
 
 const ServicesPage = () => {
   const { user } = useAuth();
@@ -16,14 +28,14 @@ const ServicesPage = () => {
   const navigate = useNavigate();
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
-  const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) {
       if (isEditorPreview()) {
         setVendorId("preview");
-        setCategories(["Sample Service"]);
+        setCategories(["catClimbing"]);
         setLoading(false);
       }
       return;
@@ -34,7 +46,7 @@ const ServicesPage = () => {
         .select("vendor_id")
         .eq("id", user.id)
         .single();
-      const vid = profile?.vendor_id;
+      const vid = (profile as any)?.vendor_id;
       if (!vid) { setLoading(false); return; }
       setVendorId(vid);
       const { data: vendor } = await supabase
@@ -48,35 +60,25 @@ const ServicesPage = () => {
     load();
   }, [user]);
 
-  const addCategory = async () => {
-    const name = newName.trim();
-    if (!name || !vendorId) return;
-    if (categories.includes(name)) {
-      toast.error("Category already exists");
-      return;
-    }
-    const updated = [...categories, name];
+  const toggleCategory = (key: string) => {
+    setCategories((prev) =>
+      prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key]
+    );
+  };
+
+  const handleSave = async () => {
+    if (!vendorId) return;
+    setSaving(true);
     if (vendorId !== "preview") {
       const { error } = await supabase
         .from("vendors")
-        .update({ categories: updated })
+        .update({ categories } as any)
         .eq("id", vendorId);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(error.message); setSaving(false); return; }
     }
-    setCategories(updated);
-    setNewName("");
-  };
-
-  const removeCategory = async (name: string) => {
-    const updated = categories.filter((c) => c !== name);
-    if (vendorId && vendorId !== "preview") {
-      const { error } = await supabase
-        .from("vendors")
-        .update({ categories: updated })
-        .eq("id", vendorId);
-      if (error) { toast.error(error.message); return; }
-    }
-    setCategories(updated);
+    toast.success(t("profile.saved"));
+    setSaving(false);
+    navigate("/profile");
   };
 
   if (loading) {
@@ -92,27 +94,29 @@ const ServicesPage = () => {
           <p className="mt-2 text-muted-foreground">{t("services.subtitle")}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <span key={cat} className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-sm font-medium">
-              {cat}
-              <button onClick={() => removeCategory(cat)} className="text-muted-foreground hover:text-destructive">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </span>
+        <div className="grid grid-cols-2 gap-3">
+          {CATEGORY_KEYS.map(({ key, emoji }) => (
+            <label
+              key={key}
+              className="flex items-center gap-2 cursor-pointer rounded-lg border border-border px-3 py-2.5 hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+            >
+              <Checkbox
+                checked={categories.includes(key)}
+                onCheckedChange={() => toggleCategory(key)}
+              />
+              <span className="text-sm">{emoji} {t(`join.${key}`)}</span>
+            </label>
           ))}
         </div>
 
-        <div className="flex gap-2">
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("services.placeholder")} maxLength={100} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())} />
-          <Button onClick={addCategory} size="icon" variant="outline">
-            <Plus className="h-4 w-4" />
+        <div className="flex gap-3">
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            {saving ? t("common.saving") : t("services.save")}
+          </Button>
+          <Button onClick={() => navigate("/profile")} size="lg" variant="outline">
+            {t("services.backToProfile")}
           </Button>
         </div>
-
-        <Button onClick={() => navigate("/profile")} size="lg">
-          {t("services.backToProfile")}
-        </Button>
       </div>
     </div>
   );

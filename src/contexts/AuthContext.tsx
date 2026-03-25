@@ -123,7 +123,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Skip if init() is already running a profile check
         if (checkingRef.current) return;
 
-        setLoading(true);
+        // Don't flash loading for token refreshes (e.g. tab switch)
+        if (event !== "TOKEN_REFRESHED") {
+          setLoading(true);
+        }
 
         let profileLinked: boolean | null = null;
         try {

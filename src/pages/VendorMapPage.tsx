@@ -6,8 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, LocateFixed } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, LocateFixed, ChevronDown, ChevronUp } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
+
+const formatUrl = (url: string) => {
+  if (!url) return url;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+};
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -41,6 +47,8 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
   const [vendors, setVendors] = useState<MapVendor[]>([]);
   const [search, setSearch] = useState("");
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
+  const [showDirectory, setShowDirectory] = useState(false);
+  const markerRefs = useRef<Record<string, L.Marker>>({}); 
 
   useEffect(() => {
     const load = async () => {
@@ -73,11 +81,40 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
     );
   };
 
-  const map = (
+  const handleVendorClick = (v: MapVendor) => {
+    setFlyTarget({ center: [v.lat, v.lng], zoom: 14 });
+    setTimeout(() => {
+      markerRefs.current[v.id]?.openPopup();
+    }, 600);
+  };
+
+  const directoryList = (
+    <div className="space-y-1">
+      {vendors.map((v) => (
+        <button
+          key={v.id}
+          onClick={() => handleVendorClick(v)}
+          className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/50 transition-colors"
+        >
+          <p className="text-sm font-medium text-foreground">{v.name}</p>
+          {v.city && <p className="text-xs text-muted-foreground">{v.city}</p>}
+          {v.categories && v.categories.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {v.categories.slice(0, 3).map((c) => (
+                <span key={c} className="text-[10px] rounded-full bg-primary/10 px-1.5 py-0.5 text-primary">{t(`join.${c}`)}</span>
+              ))}
+            </div>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  const mapElement = (
     <MapContainer
       center={[51.1657, 10.4515]}
       zoom={6}
-      className={embed ? "w-full h-screen" : "w-full h-[calc(100vh-180px)] sm:h-[calc(100vh-140px)]"}
+      className="w-full h-full"
       style={{ zIndex: 0 }}
     >
       <TileLayer
@@ -86,7 +123,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
       />
       {flyTarget && <FlyTo center={flyTarget.center} zoom={flyTarget.zoom} />}
       {vendors.map((v) => (
-        <Marker key={v.id} position={[v.lat, v.lng]}>
+        <Marker key={v.id} position={[v.lat, v.lng]} ref={(ref) => { if (ref) markerRefs.current[v.id] = ref; }}>
           <Popup>
             <div className="space-y-1 text-sm">
               <p className="font-semibold">{v.name}</p>
@@ -94,12 +131,12 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
               {v.categories && v.categories.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {v.categories.map((c) => (
-                    <span key={c} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{c}</span>
+                    <span key={c} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{t(`join.${c}`)}</span>
                   ))}
                 </div>
               )}
               {v.website && (
-                <a href={v.website} target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-medium hover:underline block">{v.website}</a>
+                <a href={formatUrl(v.website)} target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-medium hover:underline block">{v.website}</a>
               )}
               <div className="flex gap-2 pt-1">
                 <a href={`/vendors/${v.id}`} className="text-primary text-xs font-medium hover:underline">
@@ -118,7 +155,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
     </MapContainer>
   );
 
-  if (embed) return map;
+  if (embed) return <div className="w-full h-screen">{mapElement}</div>;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -134,7 +171,39 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
         <Button size="icon" variant="outline" onClick={handleSearch}><Search className="h-4 w-4" /></Button>
         <Button size="icon" variant="outline" onClick={handleLocate}><LocateFixed className="h-4 w-4" /></Button>
       </div>
-      {map}
+
+      {/* Mobile directory toggle */}
+      <div className="sm:hidden border-b">
+        <button
+          onClick={() => setShowDirectory(!showDirectory)}
+          className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-foreground"
+        >
+          <span>{t("vendorMap.directory")} ({vendors.length})</span>
+          {showDirectory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+        {showDirectory && (
+          <ScrollArea className="max-h-60 px-2 pb-2">
+            {directoryList}
+          </ScrollArea>
+        )}
+      </div>
+
+      <div className="flex-1 flex">
+        {/* Desktop sidebar */}
+        <aside className="hidden sm:block w-72 border-r bg-background overflow-hidden flex-shrink-0">
+          <div className="px-3 py-2 border-b">
+            <h3 className="text-sm font-semibold text-foreground">{t("vendorMap.directory")} ({vendors.length})</h3>
+          </div>
+          <ScrollArea className="h-[calc(100vh-180px)]">
+            <div className="p-2">
+              {directoryList}
+            </div>
+          </ScrollArea>
+        </aside>
+        <div className="flex-1 h-[calc(100vh-140px)] sm:h-[calc(100vh-140px)]">
+          {mapElement}
+        </div>
+      </div>
     </div>
   );
 };
