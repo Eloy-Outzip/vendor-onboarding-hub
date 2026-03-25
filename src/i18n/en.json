@@ -182,7 +182,17 @@
   },
   "admin": {
     "createVendor": "Create Vendor",
-    "vendorCreated": "Vendor created successfully"
+    "vendorCreated": "Vendor created successfully",
+    "vendorDashboard": "Vendor Dashboard",
+    "searchVendors": "Search vendors…",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "status_pending": "Pending",
+    "status_active": "Active",
+    "status_products_submitted": "Products Submitted",
+    "created": "Created",
+    "actions": "Actions",
+    "dashboard": "Dashboard"
   },
   "notFound": {
     "title": "404",

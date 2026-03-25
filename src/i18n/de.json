@@ -182,7 +182,17 @@
   },
   "admin": {
     "createVendor": "Anbieter erstellen",
-    "vendorCreated": "Anbieter erfolgreich erstellt"
+    "vendorCreated": "Anbieter erfolgreich erstellt",
+    "vendorDashboard": "Anbieter-Dashboard",
+    "searchVendors": "Anbieter suchen…",
+    "activate": "Aktivieren",
+    "deactivate": "Deaktivieren",
+    "status_pending": "Ausstehend",
+    "status_active": "Aktiv",
+    "status_products_submitted": "Produkte eingereicht",
+    "created": "Erstellt",
+    "actions": "Aktionen",
+    "dashboard": "Dashboard"
   },
   "notFound": {
     "title": "404",

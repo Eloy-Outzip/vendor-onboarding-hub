@@ -247,10 +247,15 @@ const AdminSection = ({ userId }: { userId?: string }) => {
   return (
     <>
       <section className="rounded-lg border p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">{t("admin.createVendor")}</h2>
-        <Button variant="outline" asChild>
-          <Link to="/admin/create-vendor">{t("admin.createVendor")} →</Link>
-        </Button>
+        <h2 className="text-lg font-semibold text-foreground">{t("admin.dashboard")}</h2>
+        <div className="flex gap-3 flex-wrap">
+          <Button variant="outline" asChild>
+            <Link to="/admin/dashboard">{t("admin.vendorDashboard")} →</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/admin/create-vendor">{t("admin.createVendor")} →</Link>
+          </Button>
+        </div>
       </section>
       <section className="rounded-lg border p-6 space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Embed Map</h2>
