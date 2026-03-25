@@ -48,7 +48,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) {
       if (isEditorPreview()) {
-        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, postal_code: null, country: null, status: "pending", categories: ["catClimbing"] });
+        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, postal_code: null, country: null, status: "pending", categories: ["catClimbing"], slug: null });
         setForm({ first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: "", website: "", address: "", city: "", postal_code: "", country: "" });
         setLoading(false);
       }
