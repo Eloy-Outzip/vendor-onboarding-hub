@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -59,10 +60,14 @@ interface Vendor {
   marketplace_url: string | null;
   logo_url: string | null;
   status: string;
+  slug: string | null;
 }
 
+const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 const VendorProfilePage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: param } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -74,14 +79,21 @@ const VendorProfilePage = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (!id) return;
-      const { data } = await supabase
-        .from("vendors")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
+      if (!param) return;
+      let query;
+      if (isUUID(param)) {
+        query = supabase.from("vendors").select("*").eq("id", param).maybeSingle();
+      } else {
+        query = supabase.from("vendors").select("*").eq("slug" as any, param).maybeSingle();
+      }
+      const { data } = await query;
       if (data) {
         const v = data as unknown as Vendor;
+        // If accessed by UUID and slug exists, redirect to slug URL
+        if (isUUID(param) && v.slug) {
+          navigate(`/vendors/${v.slug}`, { replace: true });
+          return;
+        }
         setVendor(v);
         setForm(v);
       }
@@ -94,13 +106,14 @@ const VendorProfilePage = () => {
           .maybeSingle();
         if (profile) {
           const p = profile as any;
-          setCanEdit(p.vendor_id === id || p.is_super_admin === true);
+          const vendorId = data ? (data as any).id : param;
+          setCanEdit(p.vendor_id === vendorId || p.is_super_admin === true);
         }
       }
       setLoading(false);
     };
     load();
-  }, [id, user]);
+  }, [param, user]);
 
   const handleSave = async () => {
     if (!id) return;
