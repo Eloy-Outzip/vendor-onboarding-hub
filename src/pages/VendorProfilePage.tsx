@@ -80,13 +80,14 @@ const VendorProfilePage = () => {
   useEffect(() => {
     const load = async () => {
       if (!param) return;
-      let query;
+      let data: any;
       if (isUUID(param)) {
-        query = supabase.from("vendors").select("*").eq("id", param).maybeSingle();
+        const res = await supabase.from("vendors").select("*").eq("id", param).maybeSingle();
+        data = res.data;
       } else {
-        query = supabase.from("vendors").select("*").eq("slug" as any, param).maybeSingle();
+        const res = await (supabase.from("vendors").select("*") as any).eq("slug", param).maybeSingle();
+        data = res.data;
       }
-      const { data } = await query;
       if (data) {
         const v = data as unknown as Vendor;
         // If accessed by UUID and slug exists, redirect to slug URL
