@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
           .eq("id", existingVendor.id);
         vendorId = existingVendor.id;
       } else {
+        const vendorSlug = await generateSlug(shopName, supabaseAdmin);
         const { data: newVendor, error: vendorErr } = await supabaseAdmin
           .from("vendors")
           .insert({
@@ -107,6 +108,7 @@ Deno.serve(async (req) => {
             city: city || null,
             categories: categories?.length > 0 ? categories : null,
             status: "pending",
+            slug: vendorSlug,
           })
           .select("id")
           .single();
@@ -152,6 +154,7 @@ Deno.serve(async (req) => {
     const userId = authData.user.id;
 
     // Create vendor
+    const vendorSlug = await generateSlug(shopName, supabaseAdmin);
     const { data: vendor, error: vendorError } = await supabaseAdmin
       .from("vendors")
       .insert({
@@ -162,6 +165,7 @@ Deno.serve(async (req) => {
         city: city || null,
         categories: categories?.length > 0 ? categories : null,
         status: "pending",
+        slug: vendorSlug,
       })
       .select("id")
       .single();
