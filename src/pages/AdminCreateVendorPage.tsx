@@ -80,13 +80,13 @@ const AdminCreateVendorPage = () => {
       lng: form.lng ? parseFloat(form.lng) : null,
       status: form.status,
       categories: form.categories.length > 0 ? form.categories : null,
-    }).select("id").single();
+    }).select("id, slug").single();
 
     if (error) {
       toast.error(error.message);
     } else {
       toast.success(t("admin.vendorCreated"));
-      navigate(`/vendors/${data.id}`);
+      navigate(`/vendors/${data.slug || data.id}`);
     }
     setSaving(false);
   };

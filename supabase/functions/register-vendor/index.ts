@@ -14,6 +14,19 @@ Deno.serve(async (req) => {
   try {
     const { shopName, city, website, email, categories, locale } = await req.json();
 
+    const generateSlug = async (name: string, supabase: any): Promise<string> => {
+      const base = name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      let slug = base;
+      let counter = 1;
+      while (true) {
+        const { data } = await supabase.from("vendors").select("id").eq("slug", slug).maybeSingle();
+        if (!data) break;
+        counter++;
+        slug = `${base}-${counter}`;
+      }
+      return slug;
+    };
+
     // Validate required fields
     if (!shopName?.trim() || !city?.trim() || !email?.trim()) {
       return new Response(
