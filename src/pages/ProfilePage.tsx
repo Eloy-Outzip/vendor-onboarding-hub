@@ -12,6 +12,11 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
 
+const formatUrl = (url: string) => {
+  if (!url) return url;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+};
+
 interface VendorRow {
   id: string;
   first_name: string;
@@ -21,8 +26,10 @@ interface VendorRow {
   website: string | null;
   address: string | null;
   city: string | null;
+  postal_code: string | null;
   country: string | null;
   status: string;
+  categories: string[] | null;
 }
 
 const ProfilePage = () => {
@@ -30,19 +37,18 @@ const ProfilePage = () => {
   const { t } = useLanguage();
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [vendor, setVendor] = useState<VendorRow | null>(null);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    first_name: "", name: "", email: "", phone: "", website: "", address: "", city: "", country: "",
+    first_name: "", name: "", email: "", phone: "", website: "", address: "", city: "", postal_code: "", country: "",
   });
 
   useEffect(() => {
     if (!user) {
       if (isEditorPreview()) {
-        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, country: null, status: "pending" });
-        setForm({ first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: "", website: "", address: "", city: "", country: "" });
+        setVendor({ id: "preview", first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: null, website: null, address: null, city: null, postal_code: null, country: null, status: "pending", categories: ["catClimbing"] });
+        setForm({ first_name: "Preview", name: "Preview Vendor", email: "preview@example.com", phone: "", website: "", address: "", city: "", postal_code: "", country: "" });
         setLoading(false);
       }
       return;
@@ -55,9 +61,8 @@ const ProfilePage = () => {
         const vid = (profile as any)?.vendor_id;
         if (!vid) return;
         setVendorId(vid);
-        const [vendorRes, catsRes, prodsRes] = await Promise.all([
+        const [vendorRes, prodsRes] = await Promise.all([
           supabase.from("vendors").select("*").eq("id", vid).maybeSingle(),
-          supabase.from("categories" as any).select("id, name").eq("vendor_id", vid),
           supabase.from("products").select("id").eq("vendor_id", vid),
         ]);
         if (vendorRes.data) {
@@ -66,10 +71,9 @@ const ProfilePage = () => {
           setForm({
             first_name: v.first_name || "", name: v.name || "", email: v.email || "",
             phone: v.phone || "", website: v.website || "", address: v.address || "",
-            city: v.city || "", country: v.country || "",
+            city: v.city || "", postal_code: (v as any).postal_code || "", country: v.country || "",
           });
         }
-        setCategories(((catsRes.data as any) || []) as { id: string; name: string }[]);
         setProducts(prodsRes.data || []);
       } catch (err) {
         console.error("ProfilePage load error:", err);
@@ -83,13 +87,17 @@ const ProfilePage = () => {
   const handleSave = async () => {
     if (!vendorId) return;
     setSaving(true);
-    const { error } = await supabase.from("vendors").update({
+    const payload = {
       first_name: form.first_name, name: form.name, email: form.email,
       phone: form.phone || null, website: form.website || null, address: form.address || null,
-      city: form.city || null, country: form.country || null,
-    }).eq("id", vendorId);
+      city: form.city || null, postal_code: form.postal_code || null, country: form.country || null,
+    };
+    const { error } = await supabase.from("vendors").update(payload as any).eq("id", vendorId);
     if (error) toast.error(error.message);
-    else toast.success(t("profile.saved"));
+    else {
+      toast.success(t("profile.saved"));
+      setVendor((prev) => prev ? { ...prev, ...payload } as VendorRow : prev);
+    }
     setSaving(false);
   };
 
@@ -101,9 +109,10 @@ const ProfilePage = () => {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("common.noVendor")}</div>;
   }
 
-  const step2Done = categories.length > 0;
+  const step1Done = !!(vendor.name && vendor.email && vendor.city);
+  const step2Done = (vendor.categories?.length ?? 0) > 0;
   const step3Done = ["products_submitted", "active"].includes(vendor.status) && products.length > 0;
-  const progress = 33 + (step2Done ? 33 : 0) + (step3Done ? 34 : 0);
+  const progress = (step1Done ? 33 : 0) + (step2Done ? 33 : 0) + (step3Done ? 34 : 0);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -135,7 +144,7 @@ const ProfilePage = () => {
               <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>{t("profile.phone")}</Label>
+              <Label>{t("profile.phone")} <span className="text-muted-foreground font-normal">{t("profile.phoneOptional")}</span></Label>
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </div>
           </div>
@@ -143,14 +152,18 @@ const ProfilePage = () => {
             <Label>{t("profile.website")}</Label>
             <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
             {form.website && (
-              <a href={form.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">{form.website}</a>
+              <a href={formatUrl(form.website)} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">{form.website}</a>
             )}
           </div>
           <div className="space-y-2">
             <Label>{t("profile.address")}</Label>
             <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>{t("profile.postalCode")}</Label>
+              <Input value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} />
+            </div>
             <div className="space-y-2">
               <Label>{t("profile.city")}</Label>
               <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
@@ -171,8 +184,8 @@ const ProfilePage = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <Check className="h-5 w-5 text-primary" />
               <span className="text-sm text-muted-foreground">{t("profile.servicesAdded")}</span>
-              {categories.map((c) => (
-                <span key={c.id} className="rounded-full border px-3 py-0.5 text-xs font-medium text-foreground">{c.name}</span>
+              {(vendor.categories || []).map((c) => (
+                <span key={c} className="rounded-full border px-3 py-0.5 text-xs font-medium text-foreground">{t(`join.${c}`)}</span>
               ))}
               <Button variant="link" size="sm" asChild>
                 <Link to="/services">{t("profile.editServices")}</Link>
@@ -200,6 +213,14 @@ const ProfilePage = () => {
             </Button>
           )}
         </section>
+
+        {/* View my profile link */}
+        {vendorId && (
+          <Button variant="outline" size="lg" asChild className="w-full">
+            <Link to={`/vendors/${vendorId}`}>{t("profile.viewProfile")}</Link>
+          </Button>
+        )}
+
         {/* Admin section */}
         <AdminSection userId={user?.id} />
       </div>

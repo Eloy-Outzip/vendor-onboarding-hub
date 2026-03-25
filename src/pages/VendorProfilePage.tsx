@@ -36,6 +36,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
+const formatUrl = (url: string) => {
+  if (!url) return url;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+};
+
 interface Vendor {
   id: string;
   name: string;
@@ -46,6 +51,7 @@ interface Vendor {
   website: string | null;
   address: string | null;
   city: string | null;
+  postal_code: string | null;
   country: string | null;
   categories: string[] | null;
   lat: number | null;
@@ -205,7 +211,7 @@ const VendorProfilePage = () => {
             <p>{vendor.email}</p>
             {vendor.phone && <p>{vendor.phone}</p>}
             {vendor.website && (
-              <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{vendor.website}</a>
+              <a href={formatUrl(vendor.website)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{vendor.website}</a>
             )}
           </div>
         </section>
@@ -235,6 +241,10 @@ const VendorProfilePage = () => {
               <div className="space-y-1">
                 <Label>{t("vendorProfile.city")}</Label>
                 <Input value={form.city || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>{t("vendorProfile.postalCode")}</Label>
+                <Input value={(form as any).postal_code || ""} onChange={(e) => setForm({ ...form, postal_code: e.target.value } as any)} />
               </div>
               <div className="space-y-1">
                 <Label>{t("vendorProfile.country")}</Label>

@@ -37,6 +37,7 @@ const AdminCreateVendorPage = () => {
     website: "",
     address: "",
     city: "",
+    postal_code: "",
     country: "",
     description: "",
     marketplace_url: "",
@@ -70,6 +71,7 @@ const AdminCreateVendorPage = () => {
       website: form.website || null,
       address: form.address || null,
       city: form.city || null,
+      postal_code: form.postal_code || null,
       country: form.country || null,
       description: form.description || null,
       marketplace_url: form.marketplace_url || null,
@@ -138,7 +140,11 @@ const AdminCreateVendorPage = () => {
           <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label>{t("profile.postalCode")}</Label>
+            <Input value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} />
+          </div>
           <div className="space-y-2">
             <Label>{t("join.city")}</Label>
             <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
