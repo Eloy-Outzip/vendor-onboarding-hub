@@ -15,7 +15,7 @@ import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Pencil, Save } from "lucide-react";
-import LogoUpload from "@/components/LogoUpload";
+
 
 const CATEGORY_KEYS = [
   { key: "catClimbing", emoji: "🧗" },
@@ -58,7 +58,7 @@ interface Vendor {
   lat: number | null;
   lng: number | null;
   marketplace_url: string | null;
-  logo_url: string | null;
+  
   status: string;
   slug: string | null;
 }
@@ -126,7 +126,7 @@ const VendorProfilePage = () => {
       city: form.city || null,
       country: form.country || null,
       marketplace_url: form.marketplace_url || null,
-      logo_url: form.logo_url || null,
+      
       lat: form.lat ?? null,
       lng: form.lng ?? null,
       categories: form.categories || null,
@@ -161,13 +161,9 @@ const VendorProfilePage = () => {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            {vendor.logo_url ? (
-              <img src={vendor.logo_url} alt={vendor.name} className="w-16 h-16 rounded-lg object-cover" />
-            ) : (
-              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
-                {vendor.name.charAt(0)}
-              </div>
-            )}
+            <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+              {vendor.name.charAt(0)}
+            </div>
             <div>
               {editing ? (
                 <Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} className="text-xl font-bold" />
@@ -274,10 +270,6 @@ const VendorProfilePage = () => {
               <div className="space-y-1">
                 <Label>{t("vendorProfile.country")}</Label>
                 <Input value={form.country || ""} onChange={(e) => setForm({ ...form, country: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>{t("vendorProfile.logoUrl")}</Label>
-                <LogoUpload currentUrl={form.logo_url} vendorId={vendor?.id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
               </div>
               <div className="space-y-1 sm:col-span-2">
                 <Label>{t("vendorProfile.coordinates")}</Label>

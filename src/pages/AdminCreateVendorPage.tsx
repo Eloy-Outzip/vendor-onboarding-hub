@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import LogoUpload from "@/components/LogoUpload";
+
 
 const CATEGORY_KEYS = [
   { key: "catClimbing", emoji: "🧗" },
@@ -41,7 +41,7 @@ const AdminCreateVendorPage = () => {
     country: "",
     description: "",
     marketplace_url: "",
-    logo_url: "",
+    
     lat: "",
     lng: "",
     status: "pending",
@@ -75,7 +75,7 @@ const AdminCreateVendorPage = () => {
       country: form.country || null,
       description: form.description || null,
       marketplace_url: form.marketplace_url || null,
-      logo_url: form.logo_url || null,
+      
       lat: form.lat ? parseFloat(form.lat) : null,
       lng: form.lng ? parseFloat(form.lng) : null,
       status: form.status,
@@ -182,10 +182,6 @@ const AdminCreateVendorPage = () => {
           <p className="text-xs text-muted-foreground">{t("vendorProfile.coordinatesHint")}</p>
         </div>
 
-        <div className="space-y-2">
-          <Label>{t("vendorProfile.logoUrl")}</Label>
-          <LogoUpload currentUrl={form.logo_url} onUpload={(url) => setForm({ ...form, logo_url: url })} />
-        </div>
 
         <div className="space-y-2">
           <Label>{t("join.categoriesLabel")}</Label>
