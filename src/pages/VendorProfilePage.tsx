@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
@@ -68,6 +68,7 @@ const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
 const VendorProfilePage = () => {
   const { id: param } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -115,6 +116,13 @@ const VendorProfilePage = () => {
     };
     load();
   }, [param, user]);
+
+  // Auto-enter edit mode when ?edit=true is present and user can edit
+  useEffect(() => {
+    if (searchParams.get("edit") === "true" && canEdit) {
+      setEditing(true);
+    }
+  }, [canEdit, searchParams]);
 
   const handleSave = async () => {
     if (!vendor?.id) return;
