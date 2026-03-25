@@ -143,8 +143,19 @@ const VendorProfilePage = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("common.loading")}</div>;
   if (!vendor) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Vendor not found</div>;
 
+  const seoDescription = vendor.description || [
+    ...(vendor.categories || []).map((c) => t(`join.${c}`)),
+    vendor.city,
+  ].filter(Boolean).join(", ");
+
   return (
     <div className="min-h-screen bg-muted/30">
+      <Helmet>
+        <title>{vendor.name} — Outzip</title>
+        <meta name="description" content={seoDescription} />
+        <meta property="og:title" content={vendor.name} />
+        <meta property="og:description" content={seoDescription} />
+      </Helmet>
       <AppHeader />
       <div className="mx-auto max-w-2xl px-4 py-12 space-y-8">
         {/* Header */}

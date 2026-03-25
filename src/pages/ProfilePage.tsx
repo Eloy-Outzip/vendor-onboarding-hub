@@ -30,6 +30,7 @@ interface VendorRow {
   country: string | null;
   status: string;
   categories: string[] | null;
+  slug: string | null;
 }
 
 const ProfilePage = () => {
@@ -217,7 +218,7 @@ const ProfilePage = () => {
         {/* View my profile link */}
         {vendorId && (
           <Button variant="outline" size="lg" asChild className="w-full">
-            <Link to={`/vendors/${vendorId}`}>{t("profile.viewProfile")}</Link>
+            <Link to={`/vendors/${vendor.slug || vendorId}`}>{t("profile.viewProfile")}</Link>
           </Button>
         )}
 
