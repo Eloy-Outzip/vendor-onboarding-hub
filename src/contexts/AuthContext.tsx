@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   hasProfile: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   hasProfile: false,
+  isAdmin: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -21,10 +23,15 @@ export const useAuth = () => useContext(AuthContext);
 // Exported ref so JoinPage can skip the orphan check during signup
 export const skipProfileCheck = { current: false };
 
-async function checkProfile(userId: string, retries = 1): Promise<boolean | null> {
+interface ProfileResult {
+  hasVendor: boolean;
+  isAdmin: boolean;
+}
+
+async function checkProfile(userId: string, retries = 1): Promise<ProfileResult | null> {
   const { data, error } = await supabase
     .from("profiles" as any)
-    .select("vendor_id")
+    .select("vendor_id, is_super_admin")
     .eq("id", userId)
     .maybeSingle();
   if (error) {
@@ -34,7 +41,10 @@ async function checkProfile(userId: string, retries = 1): Promise<boolean | null
     }
     return null;
   }
-  return !!(data as any)?.vendor_id;
+  return {
+    hasVendor: !!(data as any)?.vendor_id,
+    isAdmin: !!(data as any)?.is_super_admin,
+  };
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -42,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const checkingRef = useRef(false);
 
   useEffect(() => {
@@ -64,30 +75,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(null);
           setUser(null);
           setHasProfile(false);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
 
-        let profileLinked: boolean | null = null;
+        let profileResult: ProfileResult | null = null;
         try {
-          profileLinked = await checkProfile(session.user.id);
+          profileResult = await checkProfile(session.user.id);
         } catch {
-          profileLinked = null;
+          profileResult = null;
         }
         if (!mounted) return;
 
-        if (profileLinked === false && !skipProfileCheck.current) {
+        // Only sign out orphans: no vendor AND not admin
+        if (profileResult && !profileResult.hasVendor && !profileResult.isAdmin && !skipProfileCheck.current) {
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
           setHasProfile(false);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
 
         setSession(session);
         setUser(session.user);
-        setHasProfile(profileLinked !== false);
+        setHasProfile(profileResult ? profileResult.hasVendor : true);
+        setIsAdmin(profileResult ? profileResult.isAdmin : false);
         setLoading(false);
       } catch {
         if (mounted) {
@@ -108,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(null);
           setUser(null);
           setHasProfile(false);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
@@ -116,6 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(session);
           setUser(session.user);
           setHasProfile(false);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
@@ -128,30 +145,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setLoading(true);
         }
 
-        let profileLinked: boolean | null = null;
+        let profileResult: ProfileResult | null = null;
         try {
-          profileLinked = await checkProfile(session.user.id);
+          profileResult = await checkProfile(session.user.id);
         } catch {
-          profileLinked = null;
+          profileResult = null;
         }
 
-        if ((profileLinked === true || profileLinked === null) && event === "SIGNED_IN") {
+        if (profileResult && (profileResult.hasVendor || profileResult.isAdmin) && event === "SIGNED_IN") {
           supabase.functions.invoke("notify-login").catch(() => {});
         }
         if (!mounted) return;
 
-        if (profileLinked === false && event === "INITIAL_SESSION") {
+        if (profileResult && !profileResult.hasVendor && !profileResult.isAdmin && event === "INITIAL_SESSION") {
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
           setHasProfile(false);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
 
         setSession(session);
         setUser(session.user);
-        setHasProfile(profileLinked !== false);
+        setHasProfile(profileResult ? profileResult.hasVendor : true);
+        setIsAdmin(profileResult ? profileResult.isAdmin : false);
         setLoading(false);
       }
     );
@@ -164,7 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, hasProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, hasProfile, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

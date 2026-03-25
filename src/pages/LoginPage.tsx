@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { loading, hasProfile } = useAuth();
+  const { loading, hasProfile, isAdmin } = useAuth();
   const { t, locale } = useLanguage();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -21,7 +21,8 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!loading && hasProfile) navigate("/profile", { replace: true });
-  }, [hasProfile, loading, navigate]);
+    if (!loading && isAdmin && !hasProfile) navigate("/admin/dashboard", { replace: true });
+  }, [hasProfile, isAdmin, loading, navigate]);
 
   const handleSendLink = async () => {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
