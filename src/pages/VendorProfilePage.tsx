@@ -116,7 +116,7 @@ const VendorProfilePage = () => {
   }, [param, user]);
 
   const handleSave = async () => {
-    if (!id) return;
+    if (!vendor?.id) return;
     setSaving(true);
     const { error } = await supabase.from("vendors").update({
       name: form.name,
@@ -129,7 +129,7 @@ const VendorProfilePage = () => {
       lat: form.lat ?? null,
       lng: form.lng ?? null,
       categories: form.categories || null,
-    } as any).eq("id", id);
+    } as any).eq("id", vendor.id);
     if (error) toast.error(error.message);
     else {
       toast.success(t("common.save"));
@@ -265,7 +265,7 @@ const VendorProfilePage = () => {
               </div>
               <div className="space-y-1">
                 <Label>{t("vendorProfile.logoUrl")}</Label>
-                <LogoUpload currentUrl={form.logo_url} vendorId={id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
+                <LogoUpload currentUrl={form.logo_url} vendorId={vendor?.id} onUpload={(url) => setForm({ ...form, logo_url: url })} />
               </div>
               <div className="space-y-1">
                 <Label>Lat</Label>
