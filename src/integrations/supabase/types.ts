@@ -253,6 +253,7 @@ export type Database = {
           marketplace_url: string | null
           name: string
           phone: string | null
+          postal_code: string | null
           rents_equipment: boolean | null
           status: string
           website: string | null
@@ -273,6 +274,7 @@ export type Database = {
           marketplace_url?: string | null
           name: string
           phone?: string | null
+          postal_code?: string | null
           rents_equipment?: boolean | null
           status?: string
           website?: string | null
@@ -293,6 +295,7 @@ export type Database = {
           marketplace_url?: string | null
           name?: string
           phone?: string | null
+          postal_code?: string | null
           rents_equipment?: boolean | null
           status?: string
           website?: string | null
