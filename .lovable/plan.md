@@ -1,91 +1,61 @@
 
 
-## Fix Multiple Issues: Categories, Website Links, Map Directory, Postal Code, Profile Completion, Tab Switching
+## Plan: SEO-Friendly Vendor URLs + Meta Tags
 
-### 1. Fix Categories Display on ServicesPage (Screenshot Bug)
+### 1. Add `slug` column to vendors table
 
-The ServicesPage displays raw category keys (`catSnowTouring`) instead of translated labels. Line 98 shows `{cat}` — needs `{t("join." + cat)}` instead.
+**Migration:** Add a unique `slug` text column to `vendors`. Populate existing rows with a slugified version of their name (lowercase, hyphens, no special chars). Add a unique index.
 
-Also, the ProfilePage (line 60) queries a non-existent `categories` table. It should read `vendors.categories` (the array column) instead.
+```sql
+ALTER TABLE public.vendors ADD COLUMN slug text;
+UPDATE public.vendors SET slug = lower(regexp_replace(regexp_replace(name, '[^a-zA-Z0-9\s-]', '', 'g'), '\s+', '-', 'g')) WHERE slug IS NULL;
+CREATE UNIQUE INDEX vendors_slug_unique ON public.vendors (slug);
+```
 
-**Files:** `src/pages/ServicesPage.tsx`, `src/pages/ProfilePage.tsx`
+### 2. Update routing to use slug
 
-### 2. Fix Website Link on ProfilePage
+**`src/App.tsx`:** Add a new route `/vendors/:slug` (keep `/vendors/:id` as fallback for UUID-based URLs that redirect to slug URL).
 
-Line 146 in ProfilePage renders `<a href={form.website}>` but if the value is `example.com` (no protocol), the browser treats it as a relative URL → `app.outzip.de/example.com`. Fix: prepend `https://` if the URL doesn't start with `http://` or `https://`.
+### 3. Update VendorProfilePage to resolve by slug
 
-Apply the same fix on VendorMapPage popup (line 102) and VendorProfilePage contact section (line 208).
+**`src/pages/VendorProfilePage.tsx`:**
+- Detect whether the param is a UUID or a slug
+- If UUID: query by `id`, then redirect to `/vendors/{slug}`
+- If slug: query by `slug`
+- Add `<Helmet>` (react-helmet-async) for SEO meta tags: title, description, og:title, og:description with vendor name, categories, and city
 
-**Files:** `src/pages/ProfilePage.tsx`, `src/pages/VendorMapPage.tsx`, `src/pages/VendorProfilePage.tsx`
+### 4. Update all internal links to use slug
 
-### 3. Add Shop Directory Sidebar on /map Page
+**Files:**
+- `src/pages/ProfilePage.tsx` — link to `/vendors/${vendorSlug}`
+- `src/pages/AdminCreateVendorPage.tsx` — navigate to slug after creation
+- `src/pages/VendorMapPage.tsx` — vendor links in sidebar and popups
 
-Add a scrollable sidebar on the left of the map listing all vendors (name, city, categories). Clicking a vendor flies the map to their pin and opens the popup. On mobile, show the list below the search bar as a collapsible panel.
+### 5. Auto-generate slug on registration
 
-**File:** `src/pages/VendorMapPage.tsx`
+**`supabase/functions/register-vendor/index.ts`:** Generate slug from vendor name during creation. Handle collisions by appending a number suffix (e.g. `outzip-2`).
 
-### 4. Add Postal Code Field
+### 6. Add SEO meta tags with react-helmet-async
 
-**Migration:** Add `postal_code text` column to `vendors` table.
-
-**Files to update:**
-- `src/pages/ProfilePage.tsx` — add postal_code field to form
-- `src/pages/VendorProfilePage.tsx` — add to Vendor interface, edit form, display
-- `src/pages/AdminCreateVendorPage.tsx` — add to creation form
-- `src/pages/JoinPage.tsx` — optionally add to registration (or skip for simplicity)
-- `src/i18n/en.json` + `src/i18n/de.json` — add `profile.postalCode` / `vendorProfile.postalCode` keys ("PLZ" / "Postal code")
-
-### 5. Mark Phone as Optional in UI
-
-Phone is already nullable in DB. Add "(optional)" label text next to Phone labels in ProfilePage and JoinPage forms.
-
-### 6. Fix Profile Completeness Logic + Add Services Submit
-
-**Current problem:** ProfilePage checks a non-existent `categories` table for step 2. It should check `vendors.categories` array instead.
-
-**New completeness logic (ProfilePage):**
-- Step 1 (33%): Profile details saved (name, email, city filled)
-- Step 2 (+33%): `vendors.categories` has at least one entry
-- Step 3 (+34%): Products submitted
-
-**ServicesPage:** This page currently lets vendors add free-text services via an input. But the actual categories are the checkbox-based ones from JoinPage. Redesign ServicesPage to show the same checkbox grid as JoinPage/VendorProfilePage, plus a "Save" button that updates `vendors.categories` and navigates back to profile.
-
-### 7. Add "View My Profile" Button
-
-When profile is 100% complete (or anytime), add a "View profile" link on ProfilePage that navigates to `/vendors/{vendorId}` — the public-facing vendor profile page.
-
-**File:** `src/pages/ProfilePage.tsx`
-
-### 8. Fix Tab Switching "Loading" Flash
-
-In `AuthContext.tsx`, the `onAuthStateChange` handler sets `loading = true` on every event including `TOKEN_REFRESHED` (fired when returning to tab). Fix: only set `loading = true` for events that actually change the user (`SIGNED_IN`, `SIGNED_OUT`, `INITIAL_SESSION`). For `TOKEN_REFRESHED`, just update the session/user without flashing loading.
-
-**File:** `src/contexts/AuthContext.tsx`
-
-### 9. Prevent Duplicate Data
-
-In ProfilePage `handleSave`, after successful save, update the local `vendor` state so re-saves don't create inconsistencies. The current code already does `setVendor(...)` on VendorProfilePage but ProfilePage doesn't update `vendor` state after save — fix that.
-
-### Translation Keys to Add
-
-**en.json / de.json:**
-- `profile.postalCode`: "Postal code" / "PLZ"
-- `profile.viewProfile`: "View my profile →" / "Mein Profil ansehen →"
-- `profile.phoneOptional`: "(optional)" / "(optional)"
-- `services.save`: "Save" / "Speichern"
-- `vendorMap.directory`: "Shops" / "Shops"
+Install `react-helmet-async`. On VendorProfilePage, render:
+```html
+<title>{vendor.name} — Outzip</title>
+<meta name="description" content="{vendor.description || categories joined}" />
+<meta property="og:title" content="{vendor.name}" />
+<meta property="og:description" content="Categories: ..." />
+```
 
 ### Files Summary
 
 | Action | File |
 |--------|------|
-| Migration | Add `postal_code` column to `vendors` |
-| Edit | `src/contexts/AuthContext.tsx` — skip loading on TOKEN_REFRESHED |
-| Edit | `src/pages/ServicesPage.tsx` — checkbox grid, translate categories, save button |
-| Edit | `src/pages/ProfilePage.tsx` — fix categories check, add postal_code, website URL fix, view profile button, phone optional label |
-| Edit | `src/pages/VendorProfilePage.tsx` — postal_code field, website URL fix |
-| Edit | `src/pages/VendorMapPage.tsx` — vendor directory sidebar, website URL fix, translate categories |
-| Edit | `src/pages/AdminCreateVendorPage.tsx` — postal_code field |
-| Edit | `src/i18n/en.json` — new keys |
-| Edit | `src/i18n/de.json` — new keys |
+| Migration | Add `slug` column + unique index + backfill |
+| Install | `react-helmet-async` |
+| Edit | `src/App.tsx` — add slug route |
+| Edit | `src/pages/VendorProfilePage.tsx` — resolve by slug, add meta tags |
+| Edit | `src/pages/ProfilePage.tsx` — use slug in link |
+| Edit | `src/pages/VendorMapPage.tsx` — use slug in links |
+| Edit | `src/pages/AdminCreateVendorPage.tsx` — navigate to slug |
+| Edit | `supabase/functions/register-vendor/index.ts` — generate slug |
+| Edit | `src/main.tsx` — add HelmetProvider wrapper |
 
