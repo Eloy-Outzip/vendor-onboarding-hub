@@ -94,6 +94,9 @@
     "city": "Stadt",
     "country": "Land",
     "saved": "Gespeichert!",
+    "postalCode": "PLZ",
+    "phoneOptional": "(optional)",
+    "viewProfile": "Mein Profil ansehen →",
     "services": "Dienstleistungen",
     "servicesAdded": "Dienstleistungen hinzugefügt:",
     "editServices": "Bearbeiten →",
@@ -105,9 +108,10 @@
   },
   "services": {
     "title": "Was bietest du an?",
-    "subtitle": "Erzählen Sie uns, was Ihr Unternehmen am besten beschreibt – Ihre Dienstleistungen oder Ihre Expertise.",
+    "subtitle": "Wähle die Kategorien, die dein Angebot am besten beschreiben.",
     "placeholder": "z.B. Zelte, Wanderstöcke, Schneeschuhe, usw.",
-    "backToProfile": "← Zurück zum Profil"
+    "backToProfile": "← Zurück zum Profil",
+    "save": "Speichern"
   },
   "products": {
     "title": "Produkte auflisten",
@@ -165,12 +169,14 @@
     "city": "Stadt",
     "country": "Land",
     "logoUrl": "Logo-URL",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "postalCode": "PLZ"
   },
   "vendorMap": {
     "searchPlaceholder": "Stadt suchen...",
     "viewProfile": "Profil ansehen",
-    "visitShop": "Shop besuchen"
+    "visitShop": "Shop besuchen",
+    "directory": "Shops"
   },
   "admin": {
     "createVendor": "Anbieter erstellen",

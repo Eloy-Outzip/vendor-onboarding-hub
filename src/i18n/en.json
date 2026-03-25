@@ -94,6 +94,9 @@
     "city": "City",
     "country": "Country",
     "saved": "Saved!",
+    "postalCode": "Postal code",
+    "phoneOptional": "(optional)",
+    "viewProfile": "View my profile →",
     "services": "Services",
     "servicesAdded": "Services added:",
     "editServices": "Edit →",
@@ -105,9 +108,10 @@
   },
   "services": {
     "title": "What do you offer?",
-    "subtitle": "Tell us what describes your business the best, your services or your expertise.",
+    "subtitle": "Select the categories that best describe your offerings.",
     "placeholder": "e.g. Tents, hiking poles, snow shoes, etc.",
-    "backToProfile": "← Back to profile"
+    "backToProfile": "← Back to profile",
+    "save": "Save"
   },
   "products": {
     "title": "List your products",
@@ -165,12 +169,14 @@
     "city": "City",
     "country": "Country",
     "logoUrl": "Logo URL",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "postalCode": "Postal code"
   },
   "vendorMap": {
     "searchPlaceholder": "Search city...",
     "viewProfile": "View Profile",
-    "visitShop": "Visit Shop"
+    "visitShop": "Visit Shop",
+    "directory": "Shops"
   },
   "admin": {
     "createVendor": "Create Vendor",
