@@ -20,8 +20,8 @@ const LoginPage = () => {
   const [email, setEmail] = useState(params.get("email") || "");
 
   useEffect(() => {
-    if (!loading && hasProfile) navigate("/profile", { replace: true });
-    if (!loading && isAdmin && !hasProfile) navigate("/admin/dashboard", { replace: true });
+    if (!loading && isAdmin) navigate("/admin/dashboard", { replace: true });
+    else if (!loading && hasProfile) navigate("/profile", { replace: true });
   }, [hasProfile, isAdmin, loading, navigate]);
 
   const handleSendLink = async () => {
