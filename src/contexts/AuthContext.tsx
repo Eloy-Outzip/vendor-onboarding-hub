@@ -128,6 +128,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // For token refreshes (tab switch), just update session — no profile re-check
+        if (event === "TOKEN_REFRESHED") {
+          setSession(session);
+          setUser(session.user);
+          return;
+        }
+
         if (skipProfileCheck.current) {
           setSession(session);
           setUser(session.user);
@@ -140,10 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Skip if init() is already running a profile check
         if (checkingRef.current) return;
 
-        // Don't flash loading for token refreshes (e.g. tab switch)
-        if (event !== "TOKEN_REFRESHED") {
-          setLoading(true);
-        }
+        setLoading(true);
 
         let profileResult: ProfileResult | null = null;
         try {
