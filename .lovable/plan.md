@@ -1,23 +1,26 @@
 
 
-## Plan: Fix Tab-Switch Causing Page Reload
+## Plan: Fix Admin Redirect Priority
 
-### Root Cause
-
-In `AuthContext.tsx`, the `onAuthStateChange` handler runs a full profile re-check on **every** auth event, including `TOKEN_REFRESHED` (triggered when switching browser tabs). This resets `loading` state and causes all `ProtectedRoute`-wrapped pages to unmount and remount, losing form data.
+### Problem
+In `RootRedirect` (App.tsx line 33) and `LoginPage.tsx`, `hasProfile` is checked **before** `isAdmin`. When your account has both a `vendor_id` and `is_super_admin = true`, `hasProfile` evaluates to `true` first, so you always get sent to `/profile` — the `isAdmin` check on the next line is never reached.
 
 ### Fix
+Swap the order: check `isAdmin` before `hasProfile` in two places.
 
-**File: `src/contexts/AuthContext.tsx`** — In the `onAuthStateChange` callback, short-circuit `TOKEN_REFRESHED` events: just update `session` and `user` refs without re-checking the profile or toggling `loading`.
-
+**1. `src/App.tsx` — RootRedirect**
+Change the redirect priority so admins go to `/admin/dashboard` even if they also have a vendor profile:
 ```typescript
-// For token refreshes (tab switch), just update session — no profile re-check
-if (event === "TOKEN_REFRESHED") {
-  setSession(session);
-  setUser(session.user);
-  return;
-}
+if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
+if (hasProfile) return <Navigate to="/profile" replace />;
 ```
 
-This single change prevents the full re-initialization cycle on tab switches, preserving component state and form data across all pages.
+**2. `src/pages/LoginPage.tsx` — useEffect redirect**
+Same swap: check `isAdmin` first:
+```typescript
+if (!loading && isAdmin) navigate("/admin/dashboard", { replace: true });
+else if (!loading && hasProfile) navigate("/profile", { replace: true });
+```
+
+No database or schema changes needed. Two lines swapped in two files.
 
