@@ -30,8 +30,8 @@ const RootRedirect = () => {
   const { loading, hasProfile, isAdmin, user } = useAuth();
   if (isEditorPreview()) return <Navigate to="/profile" replace />;
   if (loading) return null;
-  if (hasProfile) return <Navigate to="/profile" replace />;
   if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
+  if (hasProfile) return <Navigate to="/profile" replace />;
   if (user && !hasProfile) return <Navigate to="/join" replace />;
   return <LandingPage />;
 };
