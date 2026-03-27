@@ -143,13 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
           return;
         }
-          setSession(session);
-          setUser(session.user);
-          setHasProfile(false);
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
 
         // Skip if init() is already running a profile check
         if (checkingRef.current) return;
