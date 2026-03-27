@@ -128,7 +128,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // For token refreshes (tab switch), just update session — no profile re-check
+        if (event === "TOKEN_REFRESHED") {
+          setSession(session);
+          setUser(session.user);
+          return;
+        }
+
         if (skipProfileCheck.current) {
+          setSession(session);
+          setUser(session.user);
+          setHasProfile(false);
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
           setSession(session);
           setUser(session.user);
           setHasProfile(false);
