@@ -235,7 +235,7 @@ const AdminSection = () => {
 
   if (!isAdmin) return null;
 
-  const snippet = `<iframe src="https://outzip-signup.lovable.app/map/embed" width="100%" height="500" frameborder="0"></iframe>`;
+  const snippet = `<iframe src="https://app.outzip.de/map/embed" width="100%" height="500" frameborder="0"></iframe>`;
 
   return (
     <>
