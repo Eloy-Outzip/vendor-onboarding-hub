@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, LocateFixed, ChevronDown, ChevronUp } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const formatUrl = (url: string) => {
   if (!url) return url;
