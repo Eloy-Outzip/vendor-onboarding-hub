@@ -174,7 +174,8 @@
     "cancel": "Abbrechen",
     "postalCode": "PLZ",
     "coordinates": "Koordinaten",
-    "coordinatesHint": "Aus Google Maps kopieren, z.B. 52.45935, 13.40671"
+    "coordinatesHint": "Aus Google Maps kopieren, z.B. 52.45935, 13.40671",
+    "backToMap": "Zurück zur Karte"
   },
   "vendorMap": {
     "searchPlaceholder": "Stadt suchen...",

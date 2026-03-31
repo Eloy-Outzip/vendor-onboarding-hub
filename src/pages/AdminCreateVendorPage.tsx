@@ -22,6 +22,8 @@ const CATEGORY_KEYS = [
   { key: "catSleepingBags", emoji: "🛏️" },
   { key: "catBikesEbikes", emoji: "🚲" },
   { key: "catSki", emoji: "⛷️" },
+  { key: "catCamping", emoji: "🏕️" },
+  { key: "catWaterSports", emoji: "🚣" },
   { key: "catOther", emoji: "📦" },
 ];
 

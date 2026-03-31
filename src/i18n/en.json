@@ -174,7 +174,8 @@
     "cancel": "Cancel",
     "postalCode": "Postal code",
     "coordinates": "Coordinates",
-    "coordinatesHint": "Copy from Google Maps, e.g. 52.45935, 13.40671"
+    "coordinatesHint": "Copy from Google Maps, e.g. 52.45935, 13.40671",
+    "backToMap": "Back to map"
   },
   "vendorMap": {
     "searchPlaceholder": "Search city...",

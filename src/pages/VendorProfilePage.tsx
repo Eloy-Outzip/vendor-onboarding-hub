@@ -194,11 +194,6 @@ const VendorProfilePage = () => {
               {vendor.city && <p className="text-muted-foreground">{vendor.city}{vendor.country ? `, ${vendor.country}` : ""}</p>}
             </div>
           </div>
-          {canEdit && !editing && (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> {t("vendorProfile.edit")}
-            </Button>
-          )}
         </div>
 
         {/* Description */}
