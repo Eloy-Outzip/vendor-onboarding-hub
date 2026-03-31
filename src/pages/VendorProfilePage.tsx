@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ExternalLink, Pencil, Save } from "lucide-react";
+import { ExternalLink, Pencil, Save, ArrowLeft } from "lucide-react";
 
 
 const CATEGORY_KEYS = [
