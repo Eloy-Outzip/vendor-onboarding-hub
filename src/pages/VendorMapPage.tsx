@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, LocateFixed, ChevronDown, ChevronUp } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const formatUrl = (url: string) => {
   if (!url) return url;
@@ -160,7 +160,9 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AppHeader />
+      <div className="absolute top-3 right-3 z-[1000]">
+        <LanguageSwitcher />
+      </div>
       <div className="px-4 py-3 bg-background border-b flex items-center gap-2 max-w-xl mx-auto w-full">
         <Input
           placeholder={t("vendorMap.searchPlaceholder")}

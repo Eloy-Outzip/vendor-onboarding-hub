@@ -14,19 +14,21 @@ import { Textarea } from "@/components/ui/textarea";
 import AppHeader from "@/components/AppHeader";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ExternalLink, Pencil, Save } from "lucide-react";
+import { ExternalLink, Pencil, Save, ArrowLeft } from "lucide-react";
 
 
 const CATEGORY_KEYS = [
   { key: "catClimbing", emoji: "🧗" },
   { key: "catSnowTouring", emoji: "❄️" },
   { key: "catBikeBags", emoji: "🎒" },
-  { key: "catRoofTents", emoji: "⛺" },
+  { key: "catRoofTents", emoji: "🚗" },
   { key: "catTents", emoji: "🏕️" },
   { key: "catBackpacks", emoji: "🎒" },
   { key: "catSleepingBags", emoji: "🛏️" },
   { key: "catBikesEbikes", emoji: "🚲" },
   { key: "catSki", emoji: "⛷️" },
+  { key: "catCamping", emoji: "🏕️" },
+  { key: "catWaterSports", emoji: "🚣" },
   { key: "catOther", emoji: "📦" },
 ];
 
@@ -166,6 +168,17 @@ const VendorProfilePage = () => {
       </Helmet>
       <AppHeader />
       <div className="mx-auto max-w-2xl px-4 py-12 space-y-8">
+        {/* Back to map + edit */}
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/map")}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> {t("vendorProfile.backToMap")}
+          </Button>
+          {user && canEdit && !editing && (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> {t("vendorProfile.edit")}
+            </Button>
+          )}
+        </div>
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -181,11 +194,6 @@ const VendorProfilePage = () => {
               {vendor.city && <p className="text-muted-foreground">{vendor.city}{vendor.country ? `, ${vendor.country}` : ""}</p>}
             </div>
           </div>
-          {canEdit && !editing && (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> {t("vendorProfile.edit")}
-            </Button>
-          )}
         </div>
 
         {/* Description */}

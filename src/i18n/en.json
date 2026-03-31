@@ -34,6 +34,8 @@
     "catSleepingBags": "Sleeping bags",
     "catBikesEbikes": "Bikes / E-Bikes",
     "catSki": "Ski",
+    "catCamping": "Camping gear",
+    "catWaterSports": "Water sports",
     "catOther": "Other",
     "submit": "Appear on the map now →",
     "successTitle": "Thank you, {shopname}!",
@@ -172,7 +174,8 @@
     "cancel": "Cancel",
     "postalCode": "Postal code",
     "coordinates": "Coordinates",
-    "coordinatesHint": "Copy from Google Maps, e.g. 52.45935, 13.40671"
+    "coordinatesHint": "Copy from Google Maps, e.g. 52.45935, 13.40671",
+    "backToMap": "Back to map"
   },
   "vendorMap": {
     "searchPlaceholder": "Search city...",
