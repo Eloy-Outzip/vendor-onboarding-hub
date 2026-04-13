@@ -1,71 +1,89 @@
-## Plan: Fix 5 Issues in Outzip Platform
 
-### 1. Add Missing Categories (Camping Ausrüstung + Wassersport)
 
-Add two new category keys `catCamping` and `catWaterSports` to:
+## Plan: Map Pins, Admin Dashboard Sorting, User Roles, and Auth Fix
 
-- **4 files** with `CATEGORY_KEYS` arrays: `JoinPage.tsx`, `VendorProfilePage.tsx`, `ServicesPage.tsx`, `AdminCreateVendorPage.tsx`
-- **2 i18n files**: `de.json` (add `"catCamping": "Camping Ausrüstung"`, `"catWaterSports": "Wassersport"`) and `en.json` (add `"catCamping": "Camping gear"`, `"catWaterSports": "Water sports"`)
+### 1. Orange Map Pins (Branded)
 
-Change the emoji from "catDachzelte" to: emoji "🚗"
+Replace the default blue Leaflet markers with custom SVG markers using the brand orange color (`--primary: 24 91% 48%` = `hsl(24, 91%, 48%)`).
 
-New entries:
+**Files:** `src/pages/VendorMapPage.tsx`, `src/pages/VendorProfilePage.tsx`
 
-```typescript
-{ key: "catCamping", emoji: "🏕️" },
-{ key: "catWaterSports", emoji: "🚣" },
-```
+Create a custom `L.divIcon` with an inline SVG pin in orange, replacing the default `L.Icon.Default.mergeOptions(...)` approach. Both the main map and vendor profile mini-map will use the same branded pin.
 
 ---
 
-### 2. Hide "Bearbeiten" Button from Public Users
+### 2. Admin Dashboard — Sortable Vendor Directory
 
-In `VendorProfilePage.tsx`, the edit button already checks `canEdit` (line 184), and `canEdit` is only set when `user` exists (line 103). This means unauthenticated users already cannot see it. However, the `canEdit` logic runs inside `if (user)`, so it defaults to `false` for public visitors — this is already correct.
+Add a sort selector dropdown to the Admin Dashboard table allowing sorting by: Name (A–Z), City, Status, Created date (newest/oldest).
 
-I'll verify and ensure robustness by also gating the button on `!!user` explicitly:
+**File:** `src/pages/AdminDashboardPage.tsx`
 
-```typescript
-{user && canEdit && !editing && ( ... )}
-```
+Add a `sortBy` state with options, and a `Select` dropdown next to the search input. Sort the `filtered` array before rendering.
 
----
-
-### 3. Remove Logo Header on /map, Keep Only Language Selector
-
-In `VendorMapPage.tsx`, replace `<AppHeader />` with just the `<LanguageSwitcher>` component positioned absolutely over the map. Remove the background color — the language switcher floats over the map with a subtle backdrop.
+**i18n:** Add sort-related keys to `de.json` and `en.json`.
 
 ---
 
-### 4. Fix Auth Session Persistence / Reload Loop
+### 3. User Roles & Access Setup
 
-Review the current `AuthContext.tsx` — it already:
+Current DB state:
+- `eloy@outzip.de` → profile has `is_super_admin=true` AND `vendor_id` pointing to "Outzip Outdoorverleih"
+- `orders@outzip.de` → **no profile exists yet**, but is the email on the "Outzip Outdoorverleih" vendor record already
 
-- Initializes once via `useEffect([], [])`
-- Uses `persistSession: true` in the Supabase client
-- Handles `TOKEN_REFRESHED` without triggering loading state
-- Has safety timeout
+**Changes needed:**
 
-The current implementation looks solid. I'll check `LoginPage.tsx` for any `window.location` reloads or router remounts that could cause loops, and ensure no hard reloads happen — only React state updates.
+a) **Database migration:** Update the "Outzip Outdoorverleih" vendor record email from `eloy@outzip.de` to `orders@outzip.de` (it already matches — checking again, some vendors already use `orders@outzip.de`). Actually, we need to update the vendor `bce5643c-60b3-462f-bfa9-9c8f9b73d87e` email to `orders@outzip.de`.
+
+b) **Database insert:** When `orders@outzip.de` logs in via magic link, a profile must exist linking them to the Outzip vendor. We need to:
+- Remove `vendor_id` from eloy's profile (so eloy is admin-only)
+- Create a profile for `orders@outzip.de` with `vendor_id = bce5643c-...` when they sign in
+
+However, since profiles are created during registration (via `register-vendor` edge function), and `orders@outzip.de` has no auth account yet, the cleanest approach is:
+- Use a DB update to set `eloy@outzip.de`'s profile `vendor_id = NULL` (admin-only)
+- Use the `register-vendor` flow or admin invite for `orders@outzip.de` to create the auth account + profile linked to the Outzip vendor
+
+**Simpler approach:** Use DB updates to:
+1. Set eloy's profile `vendor_id = NULL` (pure admin)
+2. Update vendor `bce5643c` email to `orders@outzip.de`
+3. The user will need to invite/register `orders@outzip.de` as a new account linked to that vendor
+
+c) **Admin navigation:** Currently admins are locked to `/admin/dashboard`. Make the `AppHeader` component show navigation links for admins (Dashboard, Create Vendor, Map, Profile) so they can navigate the full app.
+
+**Files:** `src/components/AppHeader.tsx` — add admin nav links
+
+d) **ProtectedRoute:** Already allows admins through (line 22: `if (!hasProfile && !isAdmin)`). No change needed.
+
+e) **ProfilePage:** Currently shows "No vendor profile found" for admin-only users (no vendor_id). Add a conditional: if admin without vendor, show admin dashboard links instead of the vendor form.
 
 ---
 
-### 5. Add "Back to Map" Button on Vendor Profile Pages
+### 4. Fix Authentication Triggering Constantly
 
-In `VendorProfilePage.tsx`, add a "← Zurück zur Karte" button at the top of the page content, positioned top-right, linking to `/map`.
+**Root cause:** The `onAuthStateChange` handler in `AuthContext.tsx` sets `setLoading(true)` on line 150 for every `SIGNED_IN` event, including the `INITIAL_SESSION` event that fires on page load alongside the `init()` function. This creates a race condition: `init()` finishes → sets loading=false → `onAuthStateChange` fires `INITIAL_SESSION` → sets loading=true → runs profile check again → causes re-render cycle.
 
-Add i18n keys:
+**Fix in `AuthContext.tsx`:**
+- Add `INITIAL_SESSION` to the early-return alongside `TOKEN_REFRESHED` when `init()` has already handled it (use a `initializedRef` flag)
+- After `init()` completes, set `initializedRef.current = true`
+- In `onAuthStateChange`, if `initializedRef.current` and event is `INITIAL_SESSION`, just update session/user without re-checking profile or toggling loading
 
-- `de.json`: `"vendorProfile.backToMap": "← Zurück zur Karte"`
-- `en.json`: `"vendorProfile.backToMap": "← Back to map"`
+---
 
-### Files Modified
+### Summary of File Changes
 
-- `src/pages/VendorProfilePage.tsx` — categories, edit button guard, back-to-map button
-- `src/pages/VendorMapPage.tsx` — remove header, add floating language switcher
-- `src/pages/JoinPage.tsx` — add categories
-- `src/pages/ServicesPage.tsx` — add categories
-- `src/pages/AdminCreateVendorPage.tsx` — add categories
-- `src/i18n/de.json` — new category + back-to-map keys
-- `src/i18n/en.json` — new category + back-to-map keys
-- `src/pages/LoginPage.tsx` — verify no hard reloads (fix if found)
-- `src/contexts/AuthContext.tsx` — verify no reload triggers (fix if found)
+| File | Change |
+|------|--------|
+| `src/pages/VendorMapPage.tsx` | Custom orange SVG marker icon |
+| `src/pages/VendorProfilePage.tsx` | Same orange marker for mini-map |
+| `src/pages/AdminDashboardPage.tsx` | Add sort selector for vendor table |
+| `src/components/AppHeader.tsx` | Add admin navigation links |
+| `src/pages/ProfilePage.tsx` | Handle admin-only users (no vendor) |
+| `src/contexts/AuthContext.tsx` | Fix double init race condition with `initializedRef` |
+| `src/i18n/de.json` | Sort labels, admin nav keys |
+| `src/i18n/en.json` | Sort labels, admin nav keys |
+
+### Database Changes (via migration/insert tools)
+
+1. Update eloy's profile: set `vendor_id = NULL`
+2. Update vendor `bce5643c` email to `orders@outzip.de`
+3. User will need to register/invite `orders@outzip.de` as a new account to create auth + profile for that vendor
+
