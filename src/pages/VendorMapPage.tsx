@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, LocateFixed, ChevronDown, ChevronUp } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formatUrl = (url: string) => {
   if (!url) return url;
@@ -28,6 +29,7 @@ interface MapVendor {
   marketplace_url: string | null;
   website: string | null;
   slug: string | null;
+  created_at: string;
 }
 
 const FlyTo = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
@@ -44,13 +46,14 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
   const [search, setSearch] = useState("");
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [showDirectory, setShowDirectory] = useState(false);
-  const markerRefs = useRef<Record<string, L.Marker>>({}); 
+  const [sortBy, setSortBy] = useState("name");
+  const markerRefs = useRef<Record<string, L.Marker>>({});
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
         .from("vendors")
-        .select("id, name, city, categories, lat, lng, marketplace_url, website, slug")
+        .select("id, name, city, categories, lat, lng, marketplace_url, website, slug, created_at")
         .eq("status", "active")
         .not("lat", "is", null)
         .not("lng", "is", null);
@@ -84,9 +87,32 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
     }, 600);
   };
 
+  const sortedVendors = [...vendors].sort((a, b) => {
+    switch (sortBy) {
+      case "city": return (a.city || "").localeCompare(b.city || "");
+      case "newest": return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case "oldest": return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      default: return a.name.localeCompare(b.name);
+    }
+  });
+
+  const sortSelect = (
+    <Select value={sortBy} onValueChange={setSortBy}>
+      <SelectTrigger className="h-7 w-[140px] text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="name">{t("vendorMap.sortName")}</SelectItem>
+        <SelectItem value="city">{t("vendorMap.sortCity")}</SelectItem>
+        <SelectItem value="newest">{t("vendorMap.sortNewest")}</SelectItem>
+        <SelectItem value="oldest">{t("vendorMap.sortOldest")}</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
   const directoryList = (
     <div className="space-y-1">
-      {vendors.map((v) => (
+      {sortedVendors.map((v) => (
         <button
           key={v.id}
           onClick={() => handleVendorClick(v)}
@@ -177,7 +203,10 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
           className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-foreground"
         >
           <span>{t("vendorMap.directory")} ({vendors.length})</span>
-          {showDirectory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          <div className="flex items-center gap-2">
+            {sortSelect}
+            {showDirectory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
         </button>
         {showDirectory && (
           <ScrollArea className="max-h-60 px-2 pb-2">
@@ -189,8 +218,9 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
       <div className="flex-1 flex">
         {/* Desktop sidebar */}
         <aside className="hidden sm:block w-72 border-r bg-background overflow-hidden flex-shrink-0">
-          <div className="px-3 py-2 border-b">
+          <div className="px-3 py-2 border-b flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">{t("vendorMap.directory")} ({vendors.length})</h3>
+            {sortSelect}
           </div>
           <ScrollArea className="h-[calc(100vh-180px)]">
             <div className="p-2">

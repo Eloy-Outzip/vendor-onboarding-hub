@@ -181,7 +181,11 @@
     "searchPlaceholder": "Search city...",
     "viewProfile": "View Profile",
     "visitShop": "Visit Shop",
-    "directory": "Shops"
+    "directory": "Shops",
+    "sortName": "Name (A–Z)",
+    "sortCity": "City",
+    "sortNewest": "Newest first",
+    "sortOldest": "Oldest first"
   },
   "admin": {
     "createVendor": "Create Vendor",

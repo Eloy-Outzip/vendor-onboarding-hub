@@ -181,7 +181,11 @@
     "searchPlaceholder": "Stadt suchen...",
     "viewProfile": "Profil ansehen",
     "visitShop": "Shop besuchen",
-    "directory": "Shops"
+    "directory": "Shops",
+    "sortName": "Name (A–Z)",
+    "sortCity": "Stadt",
+    "sortNewest": "Neueste zuerst",
+    "sortOldest": "Älteste zuerst"
   },
   "admin": {
     "createVendor": "Anbieter erstellen",
