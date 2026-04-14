@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, LocateFixed, ChevronDown, ChevronUp } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formatUrl = (url: string) => {
   if (!url) return url;
@@ -48,6 +47,19 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
   const [showDirectory, setShowDirectory] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const markerRefs = useRef<Record<string, L.Marker>>({});
+
+  // Load sort order from site settings
+  useEffect(() => {
+    const loadSortOrder = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("map_sort_order")
+        .eq("id", 1)
+        .single();
+      if (data?.map_sort_order) setSortBy(data.map_sort_order);
+    };
+    loadSortOrder();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -96,19 +108,6 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
     }
   });
 
-  const sortSelect = (
-    <Select value={sortBy} onValueChange={setSortBy}>
-      <SelectTrigger className="h-7 w-[140px] text-xs">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="name">{t("vendorMap.sortName")}</SelectItem>
-        <SelectItem value="city">{t("vendorMap.sortCity")}</SelectItem>
-        <SelectItem value="newest">{t("vendorMap.sortNewest")}</SelectItem>
-        <SelectItem value="oldest">{t("vendorMap.sortOldest")}</SelectItem>
-      </SelectContent>
-    </Select>
-  );
 
   const directoryList = (
     <div className="space-y-1">
@@ -203,10 +202,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
           className="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-foreground"
         >
           <span>{t("vendorMap.directory")} ({vendors.length})</span>
-          <div className="flex items-center gap-2">
-            {sortSelect}
-            {showDirectory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </div>
+          {showDirectory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
         {showDirectory && (
           <ScrollArea className="max-h-60 px-2 pb-2">
@@ -218,9 +214,8 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
       <div className="flex-1 flex">
         {/* Desktop sidebar */}
         <aside className="hidden sm:block w-72 border-r bg-background overflow-hidden flex-shrink-0">
-          <div className="px-3 py-2 border-b flex items-center justify-between">
+          <div className="px-3 py-2 border-b">
             <h3 className="text-sm font-semibold text-foreground">{t("vendorMap.directory")} ({vendors.length})</h3>
-            {sortSelect}
           </div>
           <ScrollArea className="h-[calc(100vh-180px)]">
             <div className="p-2">
