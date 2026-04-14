@@ -51,24 +51,35 @@ const AdminDashboardPage = () => {
   const [vendors, setVendors] = useState<Vendor[]>(isEditorPreview() ? MOCK_VENDORS : []);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [mapSortOrder, setMapSortOrder] = useState("name");
   const [loading, setLoading] = useState(!isEditorPreview());
 
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchVendors = async () => {
-      const { data, error } = await supabase
-        .from("vendors")
-        .select("id, first_name, name, email, city, status, categories, lat, lng, slug, created_at")
-        .order("created_at", { ascending: false });
-      if (error) {
-        console.error(error);
-        toast.error(error.message);
+    const fetchData = async () => {
+      const [vendorsRes, settingsRes] = await Promise.all([
+        supabase
+          .from("vendors")
+          .select("id, first_name, name, email, city, status, categories, lat, lng, slug, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("site_settings")
+          .select("map_sort_order")
+          .eq("id", 1)
+          .single(),
+      ]);
+      if (vendorsRes.error) {
+        console.error(vendorsRes.error);
+        toast.error(vendorsRes.error.message);
       } else {
-        setVendors((data as unknown as Vendor[]) || []);
+        setVendors((vendorsRes.data as unknown as Vendor[]) || []);
+      }
+      if (settingsRes.data?.map_sort_order) {
+        setMapSortOrder(settingsRes.data.map_sort_order);
       }
       setLoading(false);
     };
-    fetchVendors();
+    fetchData();
   }, [isAdmin]);
 
   const updateStatus = async (vendorId: string, newStatus: string) => {
