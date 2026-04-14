@@ -190,6 +190,22 @@ const AdminDashboardPage = () => {
           </div>
         </div>
 
+        {/* Map sort order control */}
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-muted-foreground font-medium">{t("admin.mapSortOrder")}:</span>
+          <Select value={mapSortOrder} onValueChange={handleMapSortChange}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">{t("admin.sortName")}</SelectItem>
+              <SelectItem value="city">{t("admin.sortCity")}</SelectItem>
+              <SelectItem value="newest">{t("admin.sortNewest")}</SelectItem>
+              <SelectItem value="oldest">{t("admin.sortOldest")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="rounded-lg border bg-background">
           <Table>
             <TableHeader>
