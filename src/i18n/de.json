@@ -200,7 +200,8 @@
     "sortOldest": "Älteste zuerst",
     "sortName": "Name (A–Z)",
     "sortCity": "Stadt",
-    "sortStatus": "Status"
+    "sortStatus": "Status",
+    "mapSortOrder": "Karten-Sortierung"
   },
   "notFound": {
     "title": "404",
