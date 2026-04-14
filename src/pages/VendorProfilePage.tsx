@@ -315,7 +315,7 @@ const VendorProfilePage = () => {
           <section className="rounded-lg overflow-hidden border" style={{ height: 200 }}>
             <MapContainer center={[vendor.lat, vendor.lng]} zoom={13} className="w-full h-full" scrollWheelZoom={false}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <Marker position={[vendor.lat, vendor.lng]} />
+              <Marker position={[vendor.lat, vendor.lng]} icon={orangeIcon} />
             </MapContainer>
           </section>
         )}
