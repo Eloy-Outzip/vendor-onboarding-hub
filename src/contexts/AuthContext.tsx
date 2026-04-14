@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [hasProfile, setHasProfile] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const checkingRef = useRef(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -104,9 +105,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setHasProfile(profileResult ? profileResult.hasVendor : true);
         setIsAdmin(profileResult ? profileResult.isAdmin : false);
         setLoading(false);
+        initializedRef.current = true;
       } catch {
         if (mounted) {
           setLoading(false);
+          initializedRef.current = true;
         }
       } finally {
         checkingRef.current = false;
@@ -128,8 +131,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // For token refreshes (tab switch), just update session — no profile re-check
-        if (event === "TOKEN_REFRESHED") {
+        // For token refreshes and duplicate initial session events, just update session
+        if (event === "TOKEN_REFRESHED" || (event === "INITIAL_SESSION" && initializedRef.current)) {
           setSession(session);
           setUser(session.user);
           return;

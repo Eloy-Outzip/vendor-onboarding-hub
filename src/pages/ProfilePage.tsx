@@ -34,7 +34,7 @@ interface VendorRow {
 }
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { t } = useLanguage();
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [vendor, setVendor] = useState<VendorRow | null>(null);
@@ -107,6 +107,19 @@ const ProfilePage = () => {
   }
 
   if (!vendor) {
+    // Admin without vendor — show admin-only view
+    if (isAdmin) {
+      return (
+        <div className="min-h-screen bg-muted/30">
+          <AppHeader />
+          <div className="mx-auto max-w-2xl px-4 py-12 sm:py-20 space-y-10">
+            <h1 className="text-2xl font-bold text-foreground">{t("admin.dashboard")}</h1>
+            <p className="text-muted-foreground">{t("common.noVendor")}</p>
+            <AdminSection />
+          </div>
+        </div>
+      );
+    }
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t("common.noVendor")}</div>;
   }
 
