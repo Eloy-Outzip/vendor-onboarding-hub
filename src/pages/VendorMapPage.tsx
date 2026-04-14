@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, LocateFixed, ChevronDown, ChevronUp } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formatUrl = (url: string) => {
   if (!url) return url;
@@ -28,6 +29,7 @@ interface MapVendor {
   marketplace_url: string | null;
   website: string | null;
   slug: string | null;
+  created_at: string;
 }
 
 const FlyTo = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
@@ -44,13 +46,14 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
   const [search, setSearch] = useState("");
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null);
   const [showDirectory, setShowDirectory] = useState(false);
-  const markerRefs = useRef<Record<string, L.Marker>>({}); 
+  const [sortBy, setSortBy] = useState("name");
+  const markerRefs = useRef<Record<string, L.Marker>>({});
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
         .from("vendors")
-        .select("id, name, city, categories, lat, lng, marketplace_url, website, slug")
+        .select("id, name, city, categories, lat, lng, marketplace_url, website, slug, created_at")
         .eq("status", "active")
         .not("lat", "is", null)
         .not("lng", "is", null);
