@@ -115,6 +115,19 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const handleMapSortChange = async (value: string) => {
+    setMapSortOrder(value);
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ map_sort_order: value } as any)
+      .eq("id", 1);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Map sort order updated");
+    }
+  };
+
   if (!isAdmin) return <Navigate to="/profile" replace />;
   if (loading) {
     return (
