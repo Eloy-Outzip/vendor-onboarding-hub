@@ -32,12 +32,7 @@ const CATEGORY_KEYS = [
   { key: "catOther", emoji: "📦" },
 ];
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
+import { orangeIcon } from "@/components/map/orangeMarker";
 
 const formatUrl = (url: string) => {
   if (!url) return url;
@@ -320,7 +315,7 @@ const VendorProfilePage = () => {
           <section className="rounded-lg overflow-hidden border" style={{ height: 200 }}>
             <MapContainer center={[vendor.lat, vendor.lng]} zoom={13} className="w-full h-full" scrollWheelZoom={false}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <Marker position={[vendor.lat, vendor.lng]} />
+              <Marker position={[vendor.lat, vendor.lng]} icon={orangeIcon} />
             </MapContainer>
           </section>
         )}

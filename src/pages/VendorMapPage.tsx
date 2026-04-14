@@ -16,12 +16,7 @@ const formatUrl = (url: string) => {
 };
 
 // Fix default marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
+import { orangeIcon } from "@/components/map/orangeMarker";
 
 interface MapVendor {
   id: string;
@@ -124,7 +119,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
       />
       {flyTarget && <FlyTo center={flyTarget.center} zoom={flyTarget.zoom} />}
       {vendors.map((v) => (
-        <Marker key={v.id} position={[v.lat, v.lng]} ref={(ref) => { if (ref) markerRefs.current[v.id] = ref; }}>
+        <Marker key={v.id} position={[v.lat, v.lng]} icon={orangeIcon} ref={(ref) => { if (ref) markerRefs.current[v.id] = ref; }}>
           <Popup>
             <div className="space-y-1 text-sm">
               <p className="font-semibold">{v.name}</p>

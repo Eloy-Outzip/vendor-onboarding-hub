@@ -195,7 +195,12 @@
     "status_products_submitted": "Products Submitted",
     "created": "Created",
     "actions": "Actions",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "sortNewest": "Newest first",
+    "sortOldest": "Oldest first",
+    "sortName": "Name (A–Z)",
+    "sortCity": "City",
+    "sortStatus": "Status"
   },
   "notFound": {
     "title": "404",

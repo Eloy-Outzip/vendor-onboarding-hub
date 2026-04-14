@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { ExternalLink, MapPin, Pencil, Search } from "lucide-react";
 import { isEditorPreview } from "@/lib/isEditorPreview";
 
@@ -47,6 +50,7 @@ const AdminDashboardPage = () => {
   const isAdmin = isEditorPreview() ? true : isAdminFromCtx;
   const [vendors, setVendors] = useState<Vendor[]>(isEditorPreview() ? MOCK_VENDORS : []);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [loading, setLoading] = useState(!isEditorPreview());
 
   useEffect(() => {
@@ -118,6 +122,17 @@ const AdminDashboardPage = () => {
     );
   });
 
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "name": return a.name.localeCompare(b.name);
+      case "city": return (a.city || "").localeCompare(b.city || "");
+      case "status": return a.status.localeCompare(b.status);
+      case "oldest": return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "newest":
+      default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
   return (
     <div className="min-h-screen bg-muted/30">
       <AppHeader />
@@ -126,14 +141,28 @@ const AdminDashboardPage = () => {
           <h1 className="text-2xl font-bold text-foreground">
             {t("admin.vendorDashboard")}
           </h1>
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={t("admin.searchVendors")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="flex items-center gap-3 w-full max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder={t("admin.searchVendors")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">{t("admin.sortNewest")}</SelectItem>
+                <SelectItem value="oldest">{t("admin.sortOldest")}</SelectItem>
+                <SelectItem value="name">{t("admin.sortName")}</SelectItem>
+                <SelectItem value="city">{t("admin.sortCity")}</SelectItem>
+                <SelectItem value="status">{t("admin.sortStatus")}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -151,7 +180,7 @@ const AdminDashboardPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((v) => (
+              {sorted.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-medium">{v.name}</TableCell>
                   <TableCell>{v.city || "—"}</TableCell>
