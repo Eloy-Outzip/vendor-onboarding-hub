@@ -181,11 +181,7 @@
     "searchPlaceholder": "Stadt suchen...",
     "viewProfile": "Profil ansehen",
     "visitShop": "Shop besuchen",
-    "directory": "Shops",
-    "sortName": "Name (A–Z)",
-    "sortCity": "Stadt",
-    "sortNewest": "Neueste zuerst",
-    "sortOldest": "Älteste zuerst"
+    "directory": "Shops"
   },
   "admin": {
     "createVendor": "Anbieter erstellen",
@@ -204,7 +200,8 @@
     "sortOldest": "Älteste zuerst",
     "sortName": "Name (A–Z)",
     "sortCity": "Stadt",
-    "sortStatus": "Status"
+    "sortStatus": "Status",
+    "mapSortOrder": "Karten-Sortierung"
   },
   "notFound": {
     "title": "404",

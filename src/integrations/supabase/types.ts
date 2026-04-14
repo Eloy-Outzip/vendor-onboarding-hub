@@ -212,6 +212,24 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          id: number
+          map_sort_order: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          map_sort_order?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          map_sort_order?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string

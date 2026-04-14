@@ -51,24 +51,35 @@ const AdminDashboardPage = () => {
   const [vendors, setVendors] = useState<Vendor[]>(isEditorPreview() ? MOCK_VENDORS : []);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [mapSortOrder, setMapSortOrder] = useState("name");
   const [loading, setLoading] = useState(!isEditorPreview());
 
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchVendors = async () => {
-      const { data, error } = await supabase
-        .from("vendors")
-        .select("id, first_name, name, email, city, status, categories, lat, lng, slug, created_at")
-        .order("created_at", { ascending: false });
-      if (error) {
-        console.error(error);
-        toast.error(error.message);
+    const fetchData = async () => {
+      const [vendorsRes, settingsRes] = await Promise.all([
+        supabase
+          .from("vendors")
+          .select("id, first_name, name, email, city, status, categories, lat, lng, slug, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("site_settings")
+          .select("map_sort_order")
+          .eq("id", 1)
+          .single(),
+      ]);
+      if (vendorsRes.error) {
+        console.error(vendorsRes.error);
+        toast.error(vendorsRes.error.message);
       } else {
-        setVendors((data as unknown as Vendor[]) || []);
+        setVendors((vendorsRes.data as unknown as Vendor[]) || []);
+      }
+      if (settingsRes.data?.map_sort_order) {
+        setMapSortOrder(settingsRes.data.map_sort_order);
       }
       setLoading(false);
     };
-    fetchVendors();
+    fetchData();
   }, [isAdmin]);
 
   const updateStatus = async (vendorId: string, newStatus: string) => {
@@ -101,6 +112,19 @@ const AdminDashboardPage = () => {
           }).catch((err) => console.error("Activation email error:", err));
         }
       }
+    }
+  };
+
+  const handleMapSortChange = async (value: string) => {
+    setMapSortOrder(value);
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ map_sort_order: value } as any)
+      .eq("id", 1);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Map sort order updated");
     }
   };
 
@@ -164,6 +188,22 @@ const AdminDashboardPage = () => {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        {/* Map sort order control */}
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-muted-foreground font-medium">{t("admin.mapSortOrder")}:</span>
+          <Select value={mapSortOrder} onValueChange={handleMapSortChange}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">{t("admin.sortName")}</SelectItem>
+              <SelectItem value="city">{t("admin.sortCity")}</SelectItem>
+              <SelectItem value="newest">{t("admin.sortNewest")}</SelectItem>
+              <SelectItem value="oldest">{t("admin.sortOldest")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="rounded-lg border bg-background">
