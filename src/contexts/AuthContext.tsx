@@ -53,7 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const checkingRef = useRef(false);
+  // Track which user IDs we've already verified profile for in this tab session
+  const verifiedUserRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -61,124 +62,97 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Safety timeout: force loading=false after 10s
     const safetyTimer = setTimeout(() => {
-      if (mounted) {
-        setLoading(false);
-      }
+      if (mounted) setLoading(false);
     }, 10000);
 
-    const init = async () => {
-      checkingRef.current = true;
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+    // Fire-and-forget profile verification — never blocks the auth event queue
+    const verifyProfile = (currentSession: Session) => {
+      const uid = currentSession.user.id;
+      // Skip if we've already verified this user in this tab session
+      if (verifiedUserRef.current === uid) return;
+
+      setTimeout(async () => {
         if (!mounted) return;
-
-        if (error || !session?.user) {
-          setSession(null);
-          setUser(null);
-          setHasProfile(false);
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-
         let profileResult: ProfileResult | null = null;
         try {
-          profileResult = await checkProfile(session.user.id);
+          profileResult = await checkProfile(uid);
         } catch {
           profileResult = null;
         }
         if (!mounted) return;
 
-        // Only sign out orphans: no vendor AND not admin
+        // Only sign out orphans: confirmed no vendor AND not admin
         if (profileResult && !profileResult.hasVendor && !profileResult.isAdmin && !skipProfileCheck.current) {
           await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setHasProfile(false);
-          setIsAdmin(false);
-          setLoading(false);
           return;
         }
 
-        setSession(session);
-        setUser(session.user);
+        verifiedUserRef.current = uid;
         setHasProfile(profileResult ? profileResult.hasVendor : true);
         setIsAdmin(profileResult ? profileResult.isAdmin : false);
-        setLoading(false);
-        initializedRef.current = true;
-      } catch {
-        if (mounted) {
-          setLoading(false);
-          initializedRef.current = true;
+
+        // Notify only on real new sign-ins
+        if (profileResult && (profileResult.hasVendor || profileResult.isAdmin)) {
+          // no-op — notify-login is now driven by SIGNED_IN below
         }
-      } finally {
-        checkingRef.current = false;
-      }
+      }, 0);
     };
 
-    init();
-
+    // Set up listener FIRST (Supabase best practice)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, newSession) => {
         if (!mounted) return;
 
-        if (!session?.user) {
+        // No session → clear everything
+        if (!newSession?.user) {
+          verifiedUserRef.current = null;
           setSession(null);
           setUser(null);
           setHasProfile(false);
           setIsAdmin(false);
           setLoading(false);
+          initializedRef.current = true;
           return;
         }
 
-        // For token refreshes and duplicate initial session events, just update session
-        if (event === "TOKEN_REFRESHED" || (event === "INITIAL_SESSION" && initializedRef.current)) {
-          setSession(session);
-          setUser(session.user);
-          return;
-        }
+        // Always update session/user (cheap, synchronous)
+        setSession(newSession);
+        setUser(newSession.user);
 
+        // Skip-profile-check mode (used during signup flow)
         if (skipProfileCheck.current) {
-          setSession(session);
-          setUser(session.user);
           setHasProfile(false);
           setIsAdmin(false);
           setLoading(false);
+          initializedRef.current = true;
           return;
         }
 
-        // Skip if init() is already running a profile check
-        if (checkingRef.current) return;
-
-        setLoading(true);
-
-        let profileResult: ProfileResult | null = null;
-        try {
-          profileResult = await checkProfile(session.user.id);
-        } catch {
-          profileResult = null;
+        // INITIAL_SESSION → first paint, must verify and unblock loading
+        if (event === "INITIAL_SESSION") {
+          if (!initializedRef.current) {
+            initializedRef.current = true;
+            verifyProfile(newSession);
+            setLoading(false);
+          }
+          return;
         }
 
-        if (profileResult && (profileResult.hasVendor || profileResult.isAdmin) && event === "SIGNED_IN") {
-          supabase.functions.invoke("notify-login").catch(() => {});
-        }
-        if (!mounted) return;
-
-        if (profileResult && !profileResult.hasVendor && !profileResult.isAdmin && event === "INITIAL_SESSION") {
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setHasProfile(false);
-          setIsAdmin(false);
+        // SIGNED_IN with a NEW user → real login, verify + notify
+        if (event === "SIGNED_IN") {
+          const isNewUser = verifiedUserRef.current !== newSession.user.id;
+          if (isNewUser) {
+            verifyProfile(newSession);
+            supabase.functions.invoke("notify-login").catch(() => {});
+          }
+          // Don't toggle loading on refocus-driven SIGNED_IN events
           setLoading(false);
+          initializedRef.current = true;
           return;
         }
 
-        setSession(session);
-        setUser(session.user);
-        setHasProfile(profileResult ? profileResult.hasVendor : true);
-        setIsAdmin(profileResult ? profileResult.isAdmin : false);
-        setLoading(false);
+        // TOKEN_REFRESHED, USER_UPDATED, etc. → just keep session fresh
+        // No loading toggle, no profile re-check
       }
     );
 

@@ -256,7 +256,7 @@ const VendorProfilePage = () => {
           </section>
         ) : vendor.marketplace_url ? (
           <Button asChild variant="outline" className="w-full">
-            <a href={vendor.marketplace_url} target="_blank" rel="noopener noreferrer">
+            <a href={formatUrl(vendor.marketplace_url)} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4 mr-2" /> {t("vendorProfile.visitShop")}
             </a>
           </Button>
