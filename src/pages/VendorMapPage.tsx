@@ -164,7 +164,7 @@ const VendorMapPage = ({ embed = false }: { embed?: boolean }) => {
                   {t("vendorMap.viewProfile")}
                 </a>
                 {v.marketplace_url && (
-                  <a href={v.marketplace_url} target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-medium hover:underline">
+                  <a href={formatUrl(v.marketplace_url)} target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-medium hover:underline">
                     {t("vendorMap.visitShop")}
                   </a>
                 )}
