@@ -66,7 +66,50 @@
     "sendingLink": "Sending…",
     "magicSent": "Check your email for a login link.",
     "errorMagic": "Failed to send login link.",
-    "errorAccountNotFound": "No account found for this email. Please sign up first."
+    "errorAccountNotFound": "No account found for this email. Please sign up first.",
+
+    "stepOf": "Step {n} of 4",
+    "stepLabel1": "Shop",
+    "stepLabel2": "Offering",
+    "stepLabel3": "Contact",
+    "stepLabel4": "Confirm",
+    "back": "Back",
+    "continue": "Continue",
+    "submitMagicLink": "Create account & send magic link",
+
+    "s1Eyebrow": "Your shop",
+    "s1Title": "Tell us who you are.",
+    "s1Lead": "Just the basics. You can adjust everything later.",
+
+    "s2Eyebrow": "What you offer",
+    "s2Title": "What do you rent?",
+    "s2Lead": "Multi-select. You can add categories anytime.",
+    "s2QuickPick": "Quick pick",
+    "s2QuickAlpine": "Alpine · Climbing + Ski + Snow touring",
+    "s2QuickBike": "Bike + Camping",
+    "s2QuickWater": "Water sports",
+
+    "s3Eyebrow": "Contact",
+    "s3Title": "How do we reach you?",
+    "s3Lead": "We use your email for the magic link — and only that. No marketing.",
+    "s3MagicHint": "Instant verification via magic link — no password to remember.",
+    "s3Terms": "I agree to the terms and privacy policy.",
+
+    "s4Eyebrow": "Confirm",
+    "s4Title": "Does this look right?",
+    "s4Lead": "Here's how your shop appears on outzip the moment we approve you.",
+    "s4Edit": "Edit",
+
+    "previewEyebrow": "Preview · how your shop appears",
+    "previewEmptyName": "Your shop name",
+    "previewEmptyCity": "Your city",
+    "previewNoCats": "No categories yet",
+
+    "successNext1": "We review your application (usually under 4 hours).",
+    "successNext2": "We drop a pin on the map for your city.",
+    "successNext3": "We send a short guide for listing your inventory.",
+    "successEmailSentTo": "Sent to",
+    "successNextTitle": "What we do while you wait"
   },
   "steps": {
     "title": "How it works",
