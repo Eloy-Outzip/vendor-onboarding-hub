@@ -66,7 +66,50 @@
     "sendingLink": "Wird gesendet…",
     "magicSent": "Prüfe deine E-Mails für den Login-Link.",
     "errorMagic": "Login-Link konnte nicht gesendet werden.",
-    "errorAccountNotFound": "Kein Konto für diese E-Mail gefunden. Bitte registriere dich zuerst."
+    "errorAccountNotFound": "Kein Konto für diese E-Mail gefunden. Bitte registriere dich zuerst.",
+
+    "stepOf": "Schritt {n} von 4",
+    "stepLabel1": "Shop",
+    "stepLabel2": "Angebot",
+    "stepLabel3": "Kontakt",
+    "stepLabel4": "Bestätigen",
+    "back": "Zurück",
+    "continue": "Weiter",
+    "submitMagicLink": "Konto erstellen & Magic Link senden",
+
+    "s1Eyebrow": "Dein Shop",
+    "s1Title": "Erzähl uns, wer du bist.",
+    "s1Lead": "Nur die Basics. Du kannst alles später anpassen.",
+
+    "s2Eyebrow": "Dein Angebot",
+    "s2Title": "Was vermietest du?",
+    "s2Lead": "Mehrfachauswahl. Du kannst Kategorien jederzeit ergänzen.",
+    "s2QuickPick": "Schnellauswahl",
+    "s2QuickAlpine": "Alpin · Klettern + Ski + Skitouring",
+    "s2QuickBike": "Bike + Camping",
+    "s2QuickWater": "Wassersport",
+
+    "s3Eyebrow": "Kontakt",
+    "s3Title": "Wie erreichen wir dich?",
+    "s3Lead": "Wir nutzen deine E-Mail für den Magic Link — und nur dafür. Keine Marketing-Mails.",
+    "s3MagicHint": "Sofort verifiziert per Magic Link — kein Passwort nötig.",
+    "s3Terms": "Ich akzeptiere die AGB und Datenschutzerklärung.",
+
+    "s4Eyebrow": "Bestätigen",
+    "s4Title": "Sieht das richtig aus?",
+    "s4Lead": "So erscheint dein Verleih auf outzip, sobald wir dich freigegeben haben.",
+    "s4Edit": "Bearbeiten",
+
+    "previewEyebrow": "Vorschau · So erscheint dein Shop",
+    "previewEmptyName": "Dein Shop-Name",
+    "previewEmptyCity": "Deine Stadt",
+    "previewNoCats": "Noch keine Kategorien",
+
+    "successNext1": "Wir prüfen deine Angaben (üblicherweise unter 4 Stunden).",
+    "successNext2": "Wir setzen einen Pin auf der Karte für deine Stadt.",
+    "successNext3": "Wir senden dir eine kurze Anleitung zum Listen deines Inventars.",
+    "successEmailSentTo": "Gesendet an",
+    "successNextTitle": "Was wir machen, während du wartest"
   },
   "steps": {
     "title": "So funktioniert's",
